@@ -545,6 +545,20 @@ export const vehicles = sqliteTable('vehicles', {
   createdAt: ts('created_at').notNull(),
 });
 
+/** Price history for marketplace items and supply goods (one row per sale). */
+export const priceTicks = sqliteTable(
+  'price_ticks',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    market: text('market').notNull(), // supply | auction
+    itemKey: text('item_key').notNull(),
+    price: integer('price').notNull(),
+    qty: integer('qty').notNull().default(1),
+    createdAt: ts('created_at').notNull(),
+  },
+  (t) => [index('price_ticks_item_idx').on(t.market, t.itemKey, t.createdAt)],
+);
+
 /** Supply-chain listings for commodities between players. */
 export const supplyListings = sqliteTable('supply_listings', {
   id: text('id').primaryKey(),
@@ -554,6 +568,9 @@ export const supplyListings = sqliteTable('supply_listings', {
   qty: integer('qty').notNull(),
   unitPrice: integer('unit_price').notNull(),
   status: text('status').notNull(),
+  /** set for private escrow deals offered to one company */
+  targetId: text('target_id'),
+  quality: integer('quality').notNull().default(50),
   createdAt: ts('created_at').notNull(),
 });
 

@@ -23,6 +23,11 @@ import './services/progression';
 import { registerBankRoutes } from './routes/bank';
 import { bankJobs } from './services/bank';
 import { registerOwnerEconomyRoutes } from './routes/owner-economy';
+import { registerCommerceRoutes } from './routes/commerce';
+import { registerOwnerCatalogRoutes } from './routes/owner-catalog';
+import { productionTick, supplyTick, salesTick, campaignTick, pruneCustomers } from './services/products';
+import { auctionTick, propertyTick, propertyRevalue, seedProperties } from './services/trade';
+import { registerSeedHook } from './db/seed-hooks';
 
 export function loadFeatures() {
   onLevelUp((companyId, level) => {
@@ -53,6 +58,21 @@ export function loadFeatures() {
   registerCompanyHook('events', eventsTick);
   registerBankRoutes();
   registerOwnerEconomyRoutes();
+  registerCommerceRoutes();
+  registerOwnerCatalogRoutes();
+  registerCompanyHook('production', productionTick);
+  registerCompanyHook('supply', supplyTick);
+  registerCompanyHook('sales', salesTick);
+  registerGlobalHook('campaigns', 15_000, campaignTick);
+  registerGlobalHook('auctions', 15_000, auctionTick);
+  registerGlobalHook('property-rent', 60_000, propertyTick);
+  registerGlobalHook('property-revalue', 3600_000, () => propertyRevalue());
+  registerJob('prune-customers', 3600_000, pruneCustomers);
+  registerSeedHook('properties', (say) => {
+    seedProperties();
+    say('🏘️ Property districts ready');
+  });
+  seedProperties();
   registerGlobalHook('bank-deposits', 30_000, bankJobs.matureDeposits);
   registerGlobalHook('bank-loans', 30_000, bankJobs.collectInstallments);
   registerGlobalHook('bank-savings-interest', cfg().bank.interestPayoutMs, bankJobs.paySavingsInterest);
