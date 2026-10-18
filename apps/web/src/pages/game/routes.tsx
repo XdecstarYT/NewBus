@@ -11,6 +11,7 @@ import { SettingsPage } from './Settings';
 import { CompanySettings } from './CompanySettings';
 import { Profile } from './Profile';
 import { News } from './News';
+import { Bank, Loans } from './Bank';
 
 /** Renders the page only if the module is enabled for this login; otherwise a funny lock screen. */
 function Guard({ module, children }: { module?: Module; children: ReactNode }) {
@@ -29,6 +30,8 @@ export const gameRoutes: Array<{ path: string; element: ReactNode }> = [
   { path: '/shop', element: g('decor', <Shop />) },
   { path: '/prestige', element: g('prestige', <Prestige />) },
   { path: '/news', element: g('news', <News />) },
+  { path: '/bank', element: g('bank', <Bank />) },
+  { path: '/loans', element: g('loans', <Loans />) },
   { path: '/profile', element: g(undefined, <Profile />) },
   { path: '/company', element: g(undefined, <CompanySettings />) },
   { path: '/settings', element: g(undefined, <SettingsPage />) },

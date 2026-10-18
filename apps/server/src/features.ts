@@ -20,6 +20,9 @@ import { registerCompanyHook } from './services/tick';
 import { contractsTick } from './services/contracts';
 import { eventsTick } from './services/events';
 import './services/progression';
+import { registerBankRoutes } from './routes/bank';
+import { bankJobs } from './services/bank';
+import { registerOwnerEconomyRoutes } from './routes/owner-economy';
 
 export function loadFeatures() {
   onLevelUp((companyId, level) => {
@@ -48,5 +51,11 @@ export function loadFeatures() {
   registerGameplayRoutes();
   registerCompanyHook('contracts', contractsTick);
   registerCompanyHook('events', eventsTick);
+  registerBankRoutes();
+  registerOwnerEconomyRoutes();
+  registerGlobalHook('bank-deposits', 30_000, bankJobs.matureDeposits);
+  registerGlobalHook('bank-loans', 30_000, bankJobs.collectInstallments);
+  registerGlobalHook('bank-savings-interest', cfg().bank.interestPayoutMs, bankJobs.paySavingsInterest);
+  registerGlobalHook('wealth-tax', 24 * 3600_000, bankJobs.wealthTax);
   void eq;
 }

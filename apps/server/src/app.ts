@@ -17,6 +17,7 @@ import { authRouter } from './routes/auth';
 import { ownerRouter } from './routes/owner';
 import { gameRouter } from './routes/game';
 import { flag } from './services/flags';
+import { trackRequest } from './services/anticheat';
 
 import { SESSION_COOKIE, CSRF_COOKIE } from './lib/cookies';
 export { SESSION_COOKIE, CSRF_COOKIE };
@@ -94,6 +95,7 @@ export function createApp() {
     if (found) {
       const viewAs = found.account.role === 'OWNER' ? req.get('x-view-as') || null : null;
       req.ctx = { account: found.account, sessionId: found.session.id, access: resolveAccess(found.account, viewAs) };
+      trackRequest(found.account.id);
       // keep company "active" for idle earnings (throttled)
       const cid = found.account.companyId;
       if (cid && !viewAs) {
