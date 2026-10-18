@@ -286,6 +286,7 @@ export function queueProduction(companyId: string, workplaceId: string, productI
         chargeCompany({ companyId, amount: unit * missing, kind: 'spend.inputs', memo: `Wholesaler: ${missing}x ${getCommodity(line.inputId).name}`, actorId });
         wholesaleCost += unit * missing;
         addStock(companyId, 'commodity', line.inputId, missing, 45);
+        bump('global', `commodity:${line.inputId}:bought`, missing);
       }
       takeStock(companyId, type, line.inputId, need);
     }
@@ -424,6 +425,7 @@ export function supplyTick(ctx: TickCtx) {
       if (n > 0) {
         addStock(co.id, 'commodity', cid, n, 50 + Math.round(Math.random() * 20));
         bump(co.id, 'commoditiesProduced', n);
+        bump('global', `commodity:${cid}:produced`, n);
       }
     }
   }
@@ -635,6 +637,7 @@ export function buyFromWholesaler(companyId: string, commodityId: string, qty: n
     chargeCompany({ companyId, amount: unit * qty, kind: 'spend.inputs', memo: `Wholesaler: ${qty}x ${def.name}`, actorId });
     addStock(companyId, 'commodity', commodityId, qty, 45);
     bump(companyId, 'inputsBought', qty);
+    bump('global', `commodity:${commodityId}:bought`, qty);
     return { unit, total: unit * qty };
   });
 }

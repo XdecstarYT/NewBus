@@ -28,6 +28,11 @@ import { registerOwnerCatalogRoutes } from './routes/owner-catalog';
 import { productionTick, supplyTick, salesTick, campaignTick, pruneCustomers } from './services/products';
 import { auctionTick, propertyTick, propertyRevalue, seedProperties } from './services/trade';
 import { registerSeedHook } from './db/seed-hooks';
+import { registerExchangeRoutes } from './routes/exchange';
+import { seedMarket, marketTick, randomMarketEvent } from './exchange/assets';
+import { marginTick } from './exchange/orders';
+import { payDividends, bondTick, proposalTick, alertTick, snapshotNetWorth } from './exchange/corporate';
+import { seedDemoMarket } from './exchange/demo';
 
 export function loadFeatures() {
   onLevelUp((companyId, level) => {
@@ -70,9 +75,31 @@ export function loadFeatures() {
   registerJob('prune-customers', 3600_000, pruneCustomers);
   registerSeedHook('properties', (say) => {
     seedProperties();
+  registerExchangeRoutes();
+  seedMarket();
+  registerGlobalHook('market', 0, marketTick);
+  registerGlobalHook('dividends', 30_000, payDividends);
+  registerGlobalHook('bonds', 60_000, bondTick);
+  registerGlobalHook('proposals', 30_000, proposalTick);
+  registerGlobalHook('price-alerts', 0, alertTick);
+  registerGlobalHook('margin', 30_000, marginTick);
+  registerGlobalHook('random-market-event', 3600_000, randomMarketEvent);
+  registerJob('networth-snapshot', 3600_000, snapshotNetWorth);
+  registerSeedHook('market-demo', (say) => seedDemoMarket(say));
     say('🏘️ Property districts ready');
   });
   seedProperties();
+  registerExchangeRoutes();
+  seedMarket();
+  registerGlobalHook('market', 0, marketTick);
+  registerGlobalHook('dividends', 30_000, payDividends);
+  registerGlobalHook('bonds', 60_000, bondTick);
+  registerGlobalHook('proposals', 30_000, proposalTick);
+  registerGlobalHook('price-alerts', 0, alertTick);
+  registerGlobalHook('margin', 30_000, marginTick);
+  registerGlobalHook('random-market-event', 3600_000, randomMarketEvent);
+  registerJob('networth-snapshot', 3600_000, snapshotNetWorth);
+  registerSeedHook('market-demo', (say) => seedDemoMarket(say));
   registerGlobalHook('bank-deposits', 30_000, bankJobs.matureDeposits);
   registerGlobalHook('bank-loans', 30_000, bankJobs.collectInstallments);
   registerGlobalHook('bank-savings-interest', cfg().bank.interestPayoutMs, bankJobs.paySavingsInterest);

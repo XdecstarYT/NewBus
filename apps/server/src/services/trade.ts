@@ -121,6 +121,7 @@ export function buySupply(buyerId: string, id: string, qty: number, actorId: str
     db.insert(schema.priceTicks).values({ market: 'supply', itemKey: `${l.itemType}:${l.itemId}`, price: l.unitPrice, qty: n, createdAt: clock.now() }).run();
     db.insert(schema.salesOrders).values({ id: newId('so'), companyId: l.sellerId, productId: l.itemId, qty: n, unitPrice: l.unitPrice, total, channel: 'players', customerType: null, buyerCompanyId: buyerId, createdAt: clock.now() }).run();
     bump(buyerId, 'supplyDeals');
+    if (l.itemType === 'commodity') bump('global', `commodity:${l.itemId}:bought`, n);
     bump(l.sellerId, 'supplyDeals');
     notify(l.sellerId, 'trade', `📦 Sold ${n}x ${itemName(l.itemType, l.itemId)?.name}`, `${co.name} paid ${total} BT (+${bonus} BT deal bonus for you both!)`);
     return { qty: n, total, bonus };

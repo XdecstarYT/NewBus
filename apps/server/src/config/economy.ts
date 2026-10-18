@@ -265,8 +265,8 @@ export const economy = {
     circuitBreakerPct: 25, // halt if price moves >25% from day open
     haltMs: 10 * 60_000,
     /** fundamentals mode: price moves this fraction of the gap to fair value per tick */
-    anchorPull: 0.03,
-    noisePct: 0.006,
+    anchorPull: 0.006,
+    noisePct: 0.002,
     /** automated market maker quote spread */
     mmSpreadBps: 150,
     /** max shares the market maker trades per order as fraction of float */
@@ -274,13 +274,15 @@ export const economy = {
     dividendIntervalMs: 15 * 60_000,
     defaultDividendPct: 20, // % of profit since last payout
     fundamentals: {
-      incomeTicksValued: 2000, // fair value counts this many ticks of net income
+      incomeTicksValued: 20_000, // fair value counts this many ticks (~28h) of net income
       perWorker: 150,
       perContract: 400,
       perLevel: 800,
       creditWeight: 0.5, // multiplier from credit score: 0.75 .. 1.25
     },
     takeoverThresholdPct: 51,
+    /** after an IPO the target blends from the IPO price to fundamentals over this long */
+    honeymoonMs: 6 * 3600_000,
     proposalDurationMs: 30 * 60_000,
     bonds: { parValue: 100, couponBpsPerPeriod: 30, periodMs: 30 * 60_000, termPeriods: 48 },
     coins: { maxHoldingValue: 50_000, volatility: 0.04 },

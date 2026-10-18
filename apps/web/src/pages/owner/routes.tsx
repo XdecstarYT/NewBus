@@ -5,6 +5,7 @@ import { CompanyList, CompanyDetail } from './Companies';
 import { Templates, Accounts, Flags, AuditLog, Ledger } from './Admin';
 import { EconomyHealth } from './Economy';
 import { CatalogManager } from './Catalog';
+import { MarketAdmin } from './Market';
 
 export const ownerRoutes: Array<{ path: string; label?: string; element: ReactNode }> = [
   { path: '', label: '🏠 Overview', element: <Overview /> },
@@ -12,6 +13,7 @@ export const ownerRoutes: Array<{ path: string; label?: string; element: ReactNo
   { path: 'companies', label: '🏢 Companies', element: <CompanyList /> },
   { path: 'companies/:id', element: <CompanyDetail /> },
   { path: 'economy', label: '📊 Economy', element: <EconomyHealth /> },
+  { path: 'market', label: '📈 Market', element: <MarketAdmin /> },
   { path: 'catalog', label: '📚 Catalog', element: <CatalogManager /> },
   { path: 'templates', label: '📋 Templates', element: <Templates /> },
   { path: 'accounts', label: '🪪 Accounts', element: <Accounts /> },
