@@ -1,0 +1,12 @@
+{
+  "name": "Digital Workforce",
+  "short_name": "Workforce",
+  "description": "Run a silly digital company staffed by quirky bots.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fef9ef",
+  "theme_color": "#7c3aed",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

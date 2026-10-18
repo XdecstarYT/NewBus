@@ -59,7 +59,7 @@ export const MODULE_INFO: Record<Module, { label: string; emoji: string; path: s
   leaderboard: { label: 'Leaderboard', emoji: '🏆', path: '/leaderboard' },
   achievements: { label: 'Achievements', emoji: '🎖️', path: '/achievements' },
   research: { label: 'Research', emoji: '🔬', path: '/research' },
-  decor: { label: 'Decor & Pets', emoji: '🪴', path: '/office' },
+  decor: { label: 'Decor & Pets', emoji: '🪴', path: '/shop' },
   prestige: { label: 'IPO Prestige', emoji: '🚀', path: '/prestige' },
   events: { label: 'Events', emoji: '🎲', path: '/office' },
   chat: { label: 'Chat', emoji: '💬', path: '/chat' },

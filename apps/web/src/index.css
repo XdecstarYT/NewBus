@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme tokens (RGB triplets so Tailwind opacity modifiers work). */
+:root {
+  --ink: 30 27 75;
+  --paper: 254 249 239;
+  --card: 255 255 255;
+  --accent: 124 58 237;
+  --accent2: 236 72 153;
+  --good: 22 163 74;
+  --bad: 220 38 38;
+  --warn: 217 119 6;
+  --muted: 100 116 139;
+  --font-scale: 1;
+  color-scheme: light;
+}
+.dark {
+  --ink: 226 232 240;
+  --paper: 15 14 35;
+  --card: 30 28 60;
+  --accent: 167 139 250;
+  --accent2: 244 114 182;
+  --good: 74 222 128;
+  --bad: 248 113 113;
+  --warn: 251 191 36;
+  --muted: 148 163 184;
+  color-scheme: dark;
+}
+/* Unlockable themes */
+.theme-candy { --accent: 236 72 153; --accent2: 251 146 60; --paper: 255 240 246; }
+.theme-ocean { --accent: 14 165 233; --accent2: 20 184 166; --paper: 236 254 255; }
+.theme-retro { --accent: 234 88 12; --accent2: 202 138 4; --paper: 254 243 199; }
+.theme-forest { --accent: 22 163 74; --accent2: 132 204 22; --paper: 240 253 244; }
+.dark.theme-candy, .dark.theme-ocean, .dark.theme-retro, .dark.theme-forest { --paper: 15 14 35; }
+/* High contrast */
+.hc { --ink: 0 0 0; --paper: 255 255 255; --card: 255 255 255; --accent: 0 0 180; --accent2: 160 0 90; --muted: 40 40 40; }
+.dark.hc { --ink: 255 255 255; --paper: 0 0 0; --card: 0 0 0; --accent: 255 255 0; --accent2: 0 255 255; --muted: 220 220 220; }
+/* Colour-blind safe palette swaps red/green semantics for blue/orange */
+.cb { --good: 37 99 235; --bad: 234 88 12; }
+
+html {
+  font-size: calc(16px * var(--font-scale));
+}
+body {
+  @apply bg-paper text-ink font-body antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+.reduce-motion *, .reduce-motion *::before, .reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+@layer components {
+  .card {
+    @apply bg-card border-[3px] border-ink rounded-3xl shadow-pop p-4;
+  }
+  .card-flat {
+    @apply bg-card border-2 border-ink/20 rounded-2xl p-3;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 select-none font-display font-bold rounded-2xl border-[3px] border-ink px-4 py-2 min-h-[44px]
+      shadow-pop active:translate-y-[3px] active:shadow-none transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:active:translate-y-0 disabled:active:shadow-pop
+      focus:outline-none focus-visible:ring-4 focus-visible:ring-accent/50;
+  }
+  .btn-primary { @apply btn bg-accent text-white; }
+  .btn-pink { @apply btn bg-accent2 text-white; }
+  .btn-good { @apply btn bg-good text-white; }
+  .btn-bad { @apply btn bg-bad text-white; }
+  .btn-ghost { @apply btn bg-card text-ink; }
+  .btn-sm { @apply px-3 py-1 min-h-[36px] text-sm rounded-xl shadow-popsm; }
+  .input {
+    @apply w-full rounded-2xl border-[3px] border-ink bg-card px-3 py-2 min-h-[44px] text-ink placeholder:text-muted
+      focus:outline-none focus:ring-4 focus:ring-accent/40;
+  }
+  .label { @apply block font-display font-bold text-sm mb-1; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full border-2 border-ink px-2 py-0.5 text-xs font-bold bg-card; }
+  .h1 { @apply font-display font-extrabold text-2xl sm:text-3xl; }
+  .h2 { @apply font-display font-extrabold text-xl; }
+  .h3 { @apply font-display font-bold text-lg; }
+  .muted { @apply text-muted; }
+  .table-clean { @apply w-full text-sm; }
+  .table-clean th { @apply text-left font-display font-bold p-2 border-b-2 border-ink/20; }
+  .table-clean td { @apply p-2 border-b border-ink/10 align-middle; }
+}
+
+.font-display { letter-spacing: 0.01em; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* Cartoon office floor */
+.office-floor {
+  background-image: linear-gradient(45deg, rgb(var(--ink) / 0.04) 25%, transparent 25%, transparent 75%, rgb(var(--ink) / 0.04) 75%),
+    linear-gradient(45deg, rgb(var(--ink) / 0.04) 25%, transparent 25%, transparent 75%, rgb(var(--ink) / 0.04) 75%);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
+}
+.sr-only-focusable:not(:focus) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

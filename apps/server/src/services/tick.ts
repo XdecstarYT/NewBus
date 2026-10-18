@@ -23,6 +23,7 @@ import { multiplier, bonus, clearModifierMemo } from './multipliers';
 import type { Company } from './companies';
 import { toCompany } from '../lib/bus';
 import { bump } from './stats';
+import { relationBonus } from './relationships';
 
 export interface TickCtx {
   company: Company;
@@ -71,7 +72,8 @@ export function projectCompany(co: Company, now = clock.now()) {
     .from(schema.campaigns)
     .where(and(eq(schema.campaigns.companyId, co.id), eq(schema.campaigns.status, 'active')))
     .get();
-  const out = companyTickOutput(workers as WorkerLike[], workplaces, { now, focusOf: (id) => focus.get(id), campaignActive }, c);
+  const relations = relationBonus(workers);
+  const out = companyTickOutput(workers as WorkerLike[], workplaces, { now, focusOf: (id) => focus.get(id), campaignActive, relationBonus: relations }, c);
   const mult = companyIncomeMultiplier(co, now);
   const diff = c.difficulty[co.difficulty] ?? c.difficulty.NORMAL;
   const wages = workers.reduce((s, w) => s + workerWage(w, c, diff.wages), 0);
@@ -87,6 +89,7 @@ export function projectCompany(co: Company, now = clock.now()) {
     workplaces,
     focus,
     campaignActive,
+    relations,
   };
 }
 
@@ -124,7 +127,7 @@ function tickCompany(co: Company, now: number) {
     const ind = getIndustry(co.industryId);
     const focus = new Map(p.workplaces.map((w) => [w.id, ind.workplaces[w.kind]?.focus]));
     const rolled = live
-      ? companyTickOutput(p.workers as WorkerLike[], p.workplaces, { now, focusOf: (id) => focus.get(id), campaignActive: p.campaignActive, rng }, c).income * p.multiplier
+      ? companyTickOutput(p.workers as WorkerLike[], p.workplaces, { now, focusOf: (id) => focus.get(id), campaignActive: p.campaignActive, rng, relationBonus: p.relations }, c).income * p.multiplier
       : p.incomePerTick;
     const grossF = rolled * ticks + cr.income;
     const gross = Math.floor(grossF);
