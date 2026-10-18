@@ -131,7 +131,7 @@ describe('products, production & sales', () => {
     const pool = balanceOf(SYS.NPC);
     post({ kind: 'test.drain', legs: [{ from: SYS.NPC, to: SYS.TREASURY, amount: pool - 2000 }] });
     const t0 = clock.now();
-    let soldBefore = 0;
+    const soldBefore = 0;
     for (let i = 1; i <= 400; i++) {
       clock.set(t0 + i * cfg().tick.intervalMs);
       db.update(schema.companies).set({ lastActiveAt: clock.now(), reputation: 500 }).where(eq(schema.companies.id, company.id)).run();

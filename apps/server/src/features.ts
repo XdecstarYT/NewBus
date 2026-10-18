@@ -33,6 +33,14 @@ import { seedMarket, marketTick, randomMarketEvent } from './exchange/assets';
 import { marginTick } from './exchange/orders';
 import { payDividends, bondTick, proposalTick, alertTick, snapshotNetWorth } from './exchange/corporate';
 import { seedDemoMarket } from './exchange/demo';
+import { registerSocialRoutes } from './routes/social';
+import { setChatHandler, setGuildLookup } from './ws/hub';
+import { sendMessage, pruneChat } from './services/chat';
+import { guildIdOf, guildQuestTick } from './services/guilds';
+import { warTick, autoScheduleWar } from './services/wars';
+import { fairTick, autoFair } from './services/fairs';
+import { onMenteeLevelUp } from './services/mentorship';
+import { newsTick } from './services/newsgen';
 
 export function loadFeatures() {
   onLevelUp((companyId, level) => {
@@ -75,17 +83,6 @@ export function loadFeatures() {
   registerJob('prune-customers', 3600_000, pruneCustomers);
   registerSeedHook('properties', (say) => {
     seedProperties();
-  registerExchangeRoutes();
-  seedMarket();
-  registerGlobalHook('market', 0, marketTick);
-  registerGlobalHook('dividends', 30_000, payDividends);
-  registerGlobalHook('bonds', 60_000, bondTick);
-  registerGlobalHook('proposals', 30_000, proposalTick);
-  registerGlobalHook('price-alerts', 0, alertTick);
-  registerGlobalHook('margin', 30_000, marginTick);
-  registerGlobalHook('random-market-event', 3600_000, randomMarketEvent);
-  registerJob('networth-snapshot', 3600_000, snapshotNetWorth);
-  registerSeedHook('market-demo', (say) => seedDemoMarket(say));
     say('🏘️ Property districts ready');
   });
   seedProperties();
@@ -104,5 +101,24 @@ export function loadFeatures() {
   registerGlobalHook('bank-loans', 30_000, bankJobs.collectInstallments);
   registerGlobalHook('bank-savings-interest', cfg().bank.interestPayoutMs, bankJobs.paySavingsInterest);
   registerGlobalHook('wealth-tax', 24 * 3600_000, bankJobs.wealthTax);
+  // Phase 8: social
+  registerSocialRoutes();
+  setChatHandler(({ accountId, channel, text }) => {
+    try {
+      sendMessage(accountId, channel, text);
+      return { ok: true };
+    } catch (e: any) {
+      return { ok: false, error: e?.message ?? 'Chat failed.' };
+    }
+  });
+  setGuildLookup(guildIdOf);
+  onLevelUp(onMenteeLevelUp);
+  registerGlobalHook('guild-quests', 60_000, guildQuestTick);
+  registerGlobalHook('wars', 15_000, warTick);
+  registerGlobalHook('fairs', 15_000, fairTick);
+  registerGlobalHook('news-gen', 120_000, newsTick);
+  registerJob('auto-war', Math.max(60_000, cfg().wars.autoScheduleEveryMs || 6 * 3600_000), () => cfg().wars.autoScheduleEveryMs && autoScheduleWar());
+  registerJob('auto-fair', Math.max(60_000, cfg().tradeFairs.everyMs || 4 * 3600_000), () => cfg().tradeFairs.everyMs && autoFair());
+  registerJob('prune-chat', 6 * 3600_000, () => pruneChat());
   void eq;
 }

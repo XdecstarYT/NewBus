@@ -36,13 +36,16 @@ interface NavItem {
   emoji: string;
 }
 
+/** Modules whose pages are not shipped yet stay out of the nav. */
+const UNBUILT = new Set<string>(['minigames', 'achievements', 'research']);
+
 export function navItems(me: Me): NavItem[] {
   const seen = new Set<string>();
   const out: NavItem[] = [];
   for (const m of MODULES) {
     if (!me.access.modules[m]) continue;
     const info = MODULE_INFO[m];
-    if (m === 'staff') continue; // lives in Company Settings
+    if (m === 'staff' || UNBUILT.has(m)) continue; // staff lives in Company Settings
     if (seen.has(info.path)) continue;
     seen.add(info.path);
     out.push({ path: info.path, label: info.label, emoji: info.emoji });

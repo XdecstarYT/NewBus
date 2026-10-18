@@ -16,6 +16,7 @@ import { eq } from 'drizzle-orm';
 import { authRouter } from './routes/auth';
 import { ownerRouter } from './routes/owner';
 import { gameRouter } from './routes/game';
+import { chatRouter, modRouter } from './routes/social';
 import { flag } from './services/flags';
 import { trackRequest } from './services/anticheat';
 
@@ -131,6 +132,8 @@ export function createApp() {
   app.use('/api/auth', authRouter());
   app.use('/api/owner', ownerRouter());
   app.use('/api/game', gameRouter());
+  app.use('/api/chat', chatRouter());
+  app.use('/api/mod', modRouter());
 
   app.use('/api', (_req, res) => res.status(404).json({ error: 'not_found', message: 'No such API route. Boss Byte checked twice.' }));
 

@@ -741,6 +741,9 @@ export const guilds = sqliteTable('guilds', {
   leaderId: text('leader_id').notNull(),
   level: integer('level').notNull().default(1),
   xp: integer('xp').notNull().default(0),
+  open: bool('open').notNull().default(true),
+  questDay: text('quest_day'),
+  questDone: bool('quest_done').notNull().default(false),
   createdAt: ts('created_at').notNull(),
 });
 
@@ -764,8 +767,10 @@ export const wars = sqliteTable('wars', {
   consolation: integer('consolation').notNull(),
   startsAt: ts('starts_at').notNull(),
   endsAt: ts('ends_at').notNull(),
-  status: text('status').notNull(), // scheduled | active | finished
+  status: text('status').notNull(), // pending | scheduled | active | finished | declined
   winnerId: text('winner_id'),
+  contest: text('contest').notNull().default('sprint'), // sprint | marketshare | hackathon | bakeoff | race
+  createdBy: text('created_by'), // company id for player challenges, null = owner/system
   createdAt: ts('created_at').notNull(),
 });
 
@@ -779,6 +784,44 @@ export const warParticipants = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.warId, t.sideId] })],
 );
+
+export const tradeFairs = sqliteTable('trade_fairs', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  theme: text('theme').notNull(), // category id or 'any'
+  boothFee: integer('booth_fee').notNull(),
+  prizePool: integer('prize_pool').notNull(),
+  startsAt: ts('starts_at').notNull(),
+  endsAt: ts('ends_at').notNull(),
+  status: text('status').notNull(), // open | finished
+  results: json<Array<{ place: number; companyId: string; name: string; score: number; prize: number }>>('results'),
+  createdAt: ts('created_at').notNull(),
+});
+
+export const fairBooths = sqliteTable(
+  'fair_booths',
+  {
+    fairId: text('fair_id').notNull(),
+    companyId: text('company_id').notNull(),
+    productId: text('product_id').notNull(),
+    qty: integer('qty').notNull(),
+    quality: real('quality').notNull(),
+    score: real('score').notNull().default(0),
+    earned: integer('earned').notNull().default(0),
+    createdAt: ts('created_at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.fairId, t.companyId] })],
+);
+
+export const mentorships = sqliteTable('mentorships', {
+  id: text('id').primaryKey(),
+  mentorId: text('mentor_id').notNull(),
+  menteeId: text('mentee_id').notNull(),
+  status: text('status').notNull(), // pending | active | graduated | ended
+  startLevel: integer('start_level').notNull(),
+  createdAt: ts('created_at').notNull(),
+  endedAt: ts('ended_at'),
+});
 
 export const chatMessages = sqliteTable(
   'chat_messages',

@@ -323,7 +323,7 @@ function StepLogin({ f, set }: { f: BuilderForm; set: (p: Partial<BuilderForm>) 
   const next = useApi<{ accountNumber: string }>(['owner-next-number'], '/owner/next-account-number');
   useEffect(() => {
     if (next.data && !f.accountNumber) set({ accountNumber: next.data.accountNumber });
-  }, [next.data]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [next.data]);
   return (
     <div className="flex flex-col gap-3">
       <h2 className="h2">5. Create the login</h2>

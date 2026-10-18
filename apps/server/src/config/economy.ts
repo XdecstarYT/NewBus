@@ -323,12 +323,55 @@ export const economy = {
     perkPerLevel: 0.01, // +1% income per guild level
     xpPerBitDeposited: 0.01,
     levelXp: (level: number) => 1000 * level * level,
+    maxLevel: 20,
+    /** Daily guild quest: members together earn this much (x member count) */
+    questEarnPerMember: 3000,
+    questRewardPerMember: 400, // Bits into the guild treasury (from the Treasury)
+    questXp: 300,
+    /** Guild party: treasury pays for a temporary income buff for every member */
+    partyCostPerMember: 800,
+    partyIncomeMult: 1.15,
+    partyMinutes: 30,
+    /** Max Bits a leader can pay out from the treasury to one member per day */
+    maxPayoutPerDay: 5000,
   },
 
   wars: {
     defaultDurationMs: 60 * 60_000,
     defaultPrize: 10_000,
     defaultConsolation: 1500,
+    /** Player-issued challenges: small Treasury prize so pairs can't farm it */
+    challengePrize: 1200,
+    challengeConsolation: 200,
+    challengeDurationsMin: [15, 30, 60, 120],
+    challengesPerDay: 3,
+    autoScheduleEveryMs: 6 * 3600_000, // system schedules a guild war this often (0 = off)
+  },
+
+  tradeFairs: {
+    everyMs: 4 * 3600_000, // auto fair cadence (0 = owner only)
+    durationMs: 45 * 60_000,
+    boothFee: 150,
+    prizePool: 6000, // split 50/30/20 among the top 3 booths
+    maxUnits: 50,
+    priceBonus: 1.5, // booth units sell for base price x this
+    reputationBonus: 3,
+  },
+
+  mentorship: {
+    minMentorLevel: 10,
+    maxMenteeLevel: 5,
+    maxMentees: 3,
+    graduateLevel: 10,
+    mentorRewardPerLevel: 60, // when a mentee levels up
+    menteeRewardPerLevel: 40,
+    graduationReward: 2500, // each
+  },
+
+  news: {
+    reportEveryMs: 60 * 60_000,
+    classifiedEveryMs: 2 * 3600_000,
+    columnEveryMs: 7 * 24 * 3600_000,
   },
 
   chat: {

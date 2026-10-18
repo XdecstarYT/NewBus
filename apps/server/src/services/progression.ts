@@ -56,7 +56,7 @@ export function spinWheel(companyId: string, actorId: string) {
     if (seg.pod) {
       try {
         result.pod = openPod(companyId, seg.pod, actorId, { free: true });
-      } catch (e: any) {
+      } catch {
         result.bits = payCompany({ companyId, amount: c.pods.types[seg.pod].cost, from: SYS.TREASURY, kind: 'reward.streak', memo: 'Pod refund (worker cap)', actorId, partial: true });
       }
     }

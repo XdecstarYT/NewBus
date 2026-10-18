@@ -15,6 +15,10 @@ import { Bank, Loans } from './Bank';
 import { Products } from './Products';
 import { SupplyChain, Marketplace, Property } from './Trade';
 import { Exchange, Portfolio } from './Exchange';
+import { ChatPage } from './Chat';
+import { Guilds } from './Guilds';
+import { Wars } from './Wars';
+import { Leaderboard, PublicProfile } from './Leaderboard';
 
 /** Renders the page only if the module is enabled for this login; otherwise a funny lock screen. */
 function Guard({ module, children }: { module?: Module; children: ReactNode }) {
@@ -41,6 +45,11 @@ export const gameRoutes: Array<{ path: string; element: ReactNode }> = [
   { path: '/property', element: g('property', <Property />) },
   { path: '/exchange', element: g('exchange', <Exchange />) },
   { path: '/portfolio', element: g('exchange', <Portfolio />) },
+  { path: '/chat', element: g('chat', <ChatPage />) },
+  { path: '/guilds', element: g('guilds', <Guilds />) },
+  { path: '/wars', element: g('wars', <Wars />) },
+  { path: '/leaderboard', element: g('leaderboard', <Leaderboard />) },
+  { path: '/profiles/:id', element: g(undefined, <PublicProfile />) },
   { path: '/profile', element: g(undefined, <Profile />) },
   { path: '/company', element: g(undefined, <CompanySettings />) },
   { path: '/settings', element: g(undefined, <SettingsPage />) },

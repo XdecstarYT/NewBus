@@ -37,9 +37,15 @@ export function patchPermissionsFor(companyId: string, patch: PermissionsPatch, 
 function diffPerms(a: Permissions, b: Permissions) {
   const o: Record<string, unknown> = {};
   const n: Record<string, unknown> = {};
-  for (const m of MODULES) if (a.modules[m] !== b.modules[m]) (o[`modules.${m}`] = a.modules[m]), (n[`modules.${m}`] = b.modules[m]);
+  for (const m of MODULES) if (a.modules[m] !== b.modules[m]) {
+    o[`modules.${m}`] = a.modules[m];
+    n[`modules.${m}`] = b.modules[m];
+  }
   for (const k of Object.keys(b.limits) as (keyof Permissions['limits'])[]) {
-    if (JSON.stringify(a.limits[k]) !== JSON.stringify(b.limits[k])) (o[`limits.${k}`] = a.limits[k]), (n[`limits.${k}`] = b.limits[k]);
+    if (JSON.stringify(a.limits[k]) !== JSON.stringify(b.limits[k])) {
+      o[`limits.${k}`] = a.limits[k];
+      n[`limits.${k}`] = b.limits[k];
+    }
   }
   return { old: o, new: n };
 }
