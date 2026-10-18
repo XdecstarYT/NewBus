@@ -1,0 +1,33 @@
+{
+  "name": "digital-workforce",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Digital Workforce - an invite-only cartoon office tycoon with a fictional Bits economy",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run migrate -w apps/server && concurrently -k -n server,web -c magenta,cyan \"npm run dev -w apps/server\" \"npm run dev -w apps/web\"",
+    "seed": "npm run seed -w apps/server",
+    "migrate": "npm run migrate -w apps/server",
+    "build": "npm run build -w apps/web",
+    "start": "npm run start -w apps/server",
+    "test": "npm run test -w apps/server",
+    "test:e2e": "npm run test:e2e -w apps/web",
+    "typecheck": "tsc -p packages/shared --noEmit && tsc -p apps/server --noEmit && tsc -p apps/web --noEmit",
+    "lint": "eslint .",
+    "simulate": "npm run simulate -w apps/server"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "concurrently": "^9.1.0",
+    "eslint": "^9.17.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^4.1.12"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
