@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { h, parse, ctx } from './http';
 import { registerOwnerRoutes } from './owner-extras';
 import * as ops from '../services/ops';
+import { syncStatus, syncNow } from '../db/supabase';
+import { env } from '../env';
 
 /** Owner operations: backups, config export/import, anti-cheat dashboard, analytics. */
 export function registerOpsRoutes() {
@@ -31,5 +33,8 @@ export function registerOpsRoutes() {
     r.post('/anticheat/resolve', h((req) => ops.resolveFlags(parse(z.object({ ids: z.array(z.string().max(64)).min(1).max(500) }), req.body).ids, ctx(req).account.id)));
 
     r.get('/analytics', h(() => ops.analytics()));
+
+    r.get('/sync', h(() => ({ configured: !!env.databaseUrl, ...syncStatus() })));
+    r.post('/sync', h(() => syncNow()));
   });
 }

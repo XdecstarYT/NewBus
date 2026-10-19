@@ -27,6 +27,10 @@ export function openDb(file = env.databasePath): DB {
   return db;
 }
 
+export function isOpen() {
+  return !!sqlite?.open;
+}
+
 export function runMigrations() {
   migrate(db, { migrationsFolder: path.join(SERVER_ROOT, 'drizzle') });
 }

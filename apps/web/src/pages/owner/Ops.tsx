@@ -20,6 +20,7 @@ export function Backups() {
   return (
     <div className="flex flex-col gap-4 max-w-4xl">
       <h1 className="h1">💾 Backups</h1>
+      <SupabaseCard />
       <div className="card flex flex-col gap-2">
         <p className="text-sm">The whole game lives in one database file. Backups are also made automatically every few hours (set <code>BACKUP_EVERY_HOURS</code>) and the oldest are cleaned up (<code>BACKUP_KEEP</code>).</p>
         <button className="btn-primary self-start" disabled={make.isPending} onClick={() => make.mutate(undefined)} data-testid="backup-now">💾 Back up now</button>
@@ -65,6 +66,32 @@ export function Backups() {
         </div>
         {importMsg && <p className="text-sm font-bold">{importMsg}</p>}
       </div>
+    </div>
+  );
+}
+
+/** Live status of the Supabase copy (the game's system of record when DATABASE_URL is set). */
+function SupabaseCard() {
+  const q = useApi<any>(['owner-sync'], '/owner/sync', { refetchInterval: 5000 });
+  const sync = useAction(() => POST('/owner/sync'), { invalidate: [['owner-sync']], success: (r: any) => (r.ok ? `☁️ Synced ${r.rows} rows to Supabase.` : r.reason) });
+  if (!q.data) return null;
+  const d = q.data;
+  if (!d.configured) {
+    return (
+      <div className="card text-sm flex flex-col gap-1">
+        <div className="h3">☁️ Supabase</div>
+        <p>Not connected. The game is saved on this server's disk only. To keep it in Supabase, set <code>DATABASE_URL</code> to your Supabase connection string (see the README).</p>
+      </div>
+    );
+  }
+  const healthy = !d.lastError;
+  return (
+    <div className="card text-sm flex flex-col gap-1" data-testid="supabase-card">
+      <div className="flex items-center gap-2"><div className="h3 flex-1">☁️ Supabase</div><span className={`chip ${healthy ? '!bg-good/20' : '!bg-bad/20'}`}>{healthy ? '🟢 In sync' : '🔴 Retrying'}</span></div>
+      <p>Every change is copied to Supabase within a few seconds. If this server restarts on a blank disk, it reloads the whole game from Supabase.</p>
+      <p className="muted">Waiting to send: {d.pending} · last sent {d.lastFlushAt ? timeAgo(d.lastFlushAt) : 'not yet'} ({d.lastRows} rows) · {d.totalRows.toLocaleString()} rows since start{d.hydratedRows ? ` · loaded ${d.hydratedRows.toLocaleString()} rows from Supabase at start-up` : ''}</p>
+      {d.lastError && <p className="text-bad font-bold">Last error: {d.lastError} ({timeAgo(d.lastErrorAt)}). Changes are kept and retried automatically.</p>}
+      <button className="btn-ghost btn-sm self-start" onClick={() => sync.mutate(undefined)} disabled={sync.isPending}>☁️ Sync now</button>
     </div>
   );
 }

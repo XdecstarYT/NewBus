@@ -1,20 +1,19 @@
 # One-click hosting on Render (https://render.com): New > Blueprint > pick this repo.
-# The persistent disk keeps everyone's progress; Render disks need a paid instance (Starter).
+# The game's data lives in Supabase (DATABASE_URL), so the server needs no disk and the
+# free plan works. On a free instance Render sleeps the server after ~15 minutes without
+# visitors; on wake-up it reloads the game from Supabase automatically.
 services:
   - type: web
     name: digital-workforce
     runtime: docker
-    plan: starter
+    plan: free
+    region: virginia # same AWS region as the Supabase project (us-east-1) = fastest sync
     healthCheckPath: /api/health
-    disk:
-      name: game-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
-      - key: COOKIE_SECURE
-        value: "true"
+      - key: DATABASE_URL
+        sync: false # paste your Supabase "Session pooler" connection string (see README)
       - key: APP_SECRET
         generateValue: true
       - key: OWNER_ACCOUNT_NUMBER

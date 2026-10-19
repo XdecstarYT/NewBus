@@ -29,6 +29,11 @@ export const env = {
   /** automatic backup interval (0 = off) */
   backupEveryHours: Number(process.env.BACKUP_EVERY_HOURS ?? 6),
   logLevel: (process.env.LOG_LEVEL ?? 'info') as 'debug' | 'info' | 'warn' | 'error',
+  /** Supabase Postgres connection string (Project Settings -> Database -> Session pooler). Empty = local only. */
+  databaseUrl: process.env.DATABASE_URL?.trim() || null,
+  /** 'auto' = rebuild the local copy from Supabase only when it is empty; 'always' = on every start */
+  syncHydrate: (process.env.SYNC_HYDRATE ?? 'auto') as 'auto' | 'always',
+  syncEveryMs: Number(process.env.SYNC_EVERY_MS ?? 2000),
   isTest: process.env.NODE_ENV === 'test' || !!process.env.VITEST,
   isProduction: process.env.NODE_ENV === 'production',
   /** Demo companies (logins 02-05 / demo1234). On by default in dev, off in production. */

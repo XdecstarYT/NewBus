@@ -4,10 +4,34 @@ import { bootstrap } from './bootstrap';
 import { createApp } from './app';
 import { attachWebSocket, closeAll } from './ws/hub';
 import { startTicker, stopTicker } from './services/tick';
-import { closeDb } from './db';
+import { closeDb, openDb, runMigrations } from './db';
+import { connectPostgres, ensureMirrorSchema, remoteHasData, hydrate, installTriggers, queueEverything, startSync, stopSync, setSyncConnection, type Pg } from './db/supabase';
 import { log } from './lib/log';
 import { startScheduledJobs, stopScheduledJobs } from './jobs';
 import { needsSeed, seedData, ensureOwnerAccess } from './db/seed';
+
+// Supabase: the system of record. Rebuild the local working copy from it when needed,
+// and capture every change before anything else writes.
+let pg: Pg | null = null;
+if (env.databaseUrl) {
+  openDb();
+  runMigrations();
+  pg = await connectPostgres(env.databaseUrl);
+  await ensureMirrorSchema(pg);
+  const remote = await remoteHasData(pg);
+  const localEmpty = needsSeed();
+  if (remote && (localEmpty || env.syncHydrate === 'always')) {
+    log.info('loading the game from Supabase...');
+    await hydrate(pg);
+    installTriggers();
+  } else if (!remote) {
+    log.info('Supabase is empty - uploading this game to it');
+    queueEverything();
+  } else installTriggers();
+  setSyncConnection(pg);
+  startSync(pg, env.syncEveryMs);
+  log.info('Supabase sync on', { everyMs: env.syncEveryMs });
+}
 
 bootstrap();
 // First start on a fresh server: create the owner, templates and starter world automatically.
@@ -39,11 +63,15 @@ function shutdown(signal: string) {
   stopTicker();
   stopScheduledJobs();
   closeAll();
-  server.close(() => {
+  server.close(async () => {
+    if (pg) {
+      await stopSync(pg); // push the last few seconds of changes
+      await pg.end();
+    }
     closeDb();
     process.exit(0);
   });
-  setTimeout(() => process.exit(0), 5000).unref();
+  setTimeout(() => process.exit(0), 15_000).unref();
 }
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));

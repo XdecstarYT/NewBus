@@ -8,6 +8,7 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
+      # DATABASE_URL comes from .env (optional): your Supabase connection string
       DATABASE_PATH: /data/digital-workforce.db
       BACKUP_DIR: /data/backups
     volumes:

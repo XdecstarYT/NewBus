@@ -40,7 +40,16 @@
   - **Faster achievement checks:** one stats query per company instead of ~250.
 - **Accessibility fixes from the axe scans:** darker green, pink and muted colours for contrast, rarity chips with readable text, a heading on every page, proper roles on progress pips.
 
+- **Supabase backend:**
+  - **System of record:** Supabase Postgres (project `digital-workforce`, us-east-1, schema `game`, 71 tables, RLS on everything, locked away from the public API) holds the game.
+  - **Fast local copy:** the engine keeps a local SQLite working copy because the tick makes thousands of tiny queries. SQLite triggers capture every insert, update and delete into `_sync_queue`, which is streamed to Postgres in batched upserts every ~2 s inside a transaction and retried with backoff if Supabase is unreachable.
+  - **Start-up and shutdown:** an empty server rebuilds itself from Supabase on start, and the last changes are flushed on shutdown.
+  - **Owner tools:** a status card and "Sync now" button on 💾 Backups.
+  - **Verified:** tests against a real Postgres engine (PGlite) cover the full upload, streaming and rebuilding a fresh server. An end-to-end run against Postgres 17 had server 1 upload, play and shut down, then server 2 on a blank disk reloaded 6,904 rows and the player logged straight in. The schema is applied to the real Supabase project.
+  - **Hosting:** Render can now run on the free plan (no disk).
+
 ## Still open / ideas
+- Supabase writes trail the game by up to ~2 seconds (a hard crash loses at most those seconds). Only one game server should write to a given Supabase project at a time.
 - Options and margin trading are only partly built (short selling is behind the `shorting` flag; there is no options chain).
 - Localization: only English strings exist (the i18n scaffold is in `apps/web/src/i18n`).
 - Browser notifications work while the game is open (even in a background tab); there is no Web Push server yet for when the app is fully closed.

@@ -14,7 +14,7 @@ You are the **Owner**. You create every company and login from the Owner Control
 |---|---|---|
 | Try it yourself right now | [Play on your computer](#1-play-on-your-computer) | Free |
 | Play with friends and family in the same house | [Play on your home Wi-Fi](#2-play-with-people-on-your-wi-fi) | Free |
-| Let friends play from anywhere, on their phones | [Host it online](#3-host-it-online-so-anyone-you-invite-can-play) | ~$7/month on Render |
+| Let friends play from anywhere, on their phones | [Host it online](#3-host-it-online-so-anyone-you-invite-can-play) | Free (Render + Supabase) |
 
 Everyone plays in a normal web browser: phone, tablet or computer. On a phone, use **Share → Add to Home Screen** (iPhone) or **⋮ → Install app** (Android) and it opens like an app.
 
@@ -49,14 +49,28 @@ Make each player a company in **Owner Control Panel → Company Builder** and gi
 
 ### 3. Host it online so anyone you invite can play
 
-#### Easiest: Render (one click)
+#### Easiest: Render + Supabase (free)
 
-1. Put this project in your own GitHub repository.
-2. Sign up at <https://render.com>, click **New → Blueprint**, and pick the repository. Render reads [`render.yaml`](render.yaml).
-3. When it asks for **OWNER_PASSWORD**, type a strong password of your own. `APP_SECRET` is generated for you.
-4. Wait for the deploy, then open the `https://...onrender.com` address Render gives you. Log in as `01` with your password.
+The game's data lives in **Supabase** (your project `digital-workforce`), so the server itself needs no disk and Render's free plan works.
 
-The blueprint uses Render's **Starter** plan with a 1 GB disk, because the game needs a disk to remember everyone's progress. Free instances lose their data when they restart.
+1. **Get your Supabase connection string.**
+   - Open your project at <https://supabase.com/dashboard/project/rkrxszigtrjmboesxvhn>.
+   - Click **Connect** (top of the page), choose **Session pooler**, and copy the URI. It looks like `postgresql://postgres.rkrxszigtrjmboesxvhn:[YOUR-PASSWORD]@aws-…-us-east-1.pooler.supabase.com:5432/postgres`.
+   - Don't know the database password? Go to **Project Settings → Database → Reset database password**, then put that password into the URI.
+2. Put this project in your own GitHub repository.
+3. Sign up at <https://render.com>, click **New → Blueprint**, and pick the repository. Render reads [`render.yaml`](render.yaml).
+4. When it asks for **DATABASE_URL**, paste the connection string from step 1.
+5. Wait for the deploy, then open the `https://...onrender.com` address. Log in as `01` / `Diddy` and pick a new password.
+
+**What happens behind the scenes:**
+- The server keeps a fast working copy of the game and copies every change to Supabase within about 2 seconds.
+- When the server restarts (a deploy, or Render waking it from sleep), it reloads the whole game from Supabase.
+- You can browse all the data in Supabase under **Table Editor → schema `game`**. That schema is locked away from Supabase's public API, so only the game server can read it.
+- **🛠 Owner Panel → 💾 Backups** shows the live sync status.
+
+> Free-plan notes:
+> - Render sleeps the server after about 15 minutes without visitors, so companies earn their offline income (capped at 8 hours) instead of live income.
+> - Supabase pauses free projects after a week of no activity at all. A game people play stays active.
 
 #### Any server with Docker (VPS, home server, Raspberry Pi 4/5)
 
