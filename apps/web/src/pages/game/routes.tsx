@@ -19,6 +19,7 @@ import { ChatPage } from './Chat';
 import { Guilds } from './Guilds';
 import { Wars } from './Wars';
 import { Leaderboard, PublicProfile } from './Leaderboard';
+import { Packages } from './Packages';
 
 /** Renders the page only if the module is enabled for this login; otherwise a funny lock screen. */
 function Guard({ module, children }: { module?: Module; children: ReactNode }) {
@@ -50,6 +51,8 @@ export const gameRoutes: Array<{ path: string; element: ReactNode }> = [
   { path: '/wars', element: g('wars', <Wars />) },
   { path: '/leaderboard', element: g('leaderboard', <Leaderboard />) },
   { path: '/profiles/:id', element: g(undefined, <PublicProfile />) },
+  { path: '/packages', element: g(undefined, <Packages />) },
+  { path: '/redeem/:code', element: g(undefined, <Packages />) },
   { path: '/profile', element: g(undefined, <Profile />) },
   { path: '/company', element: g(undefined, <CompanySettings />) },
   { path: '/settings', element: g(undefined, <SettingsPage />) },

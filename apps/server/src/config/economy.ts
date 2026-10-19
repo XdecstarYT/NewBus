@@ -369,6 +369,13 @@ export const economy = {
     graduationReward: 2500, // each
   },
 
+  realPackages: {
+    maxBitsPerPackage: 100_000, // Bits per claim (paid from the Treasury)
+    maxCardsPerBatch: 200,
+    maxClaimsPerCard: 1000,
+    failedTriesPerHour: 10, // wrong codes before an account must wait (stops guessing)
+  },
+
   news: {
     reportEveryMs: 60 * 60_000,
     classifiedEveryMs: 2 * 3600_000,

@@ -98,3 +98,11 @@ body {
   background-position: 0 0, 16px 16px;
 }
 .sr-only-focusable:not(:focus) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Printing package cards: only the print sheet is printed. */
+@media print {
+  body.printing-cards * { visibility: hidden !important; }
+  body.printing-cards #print-sheet, body.printing-cards #print-sheet * { visibility: visible !important; }
+  body.printing-cards #print-sheet { position: absolute; inset: 0 auto auto 0; width: 100%; }
+  .pkg-card { break-inside: avoid; }
+}

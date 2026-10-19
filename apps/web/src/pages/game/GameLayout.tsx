@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { NavLink, Outlet, useNavigate, useParams, Link } from 'react-router';
+import { NavLink, Outlet, useNavigate, useParams, Link, useLocation } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { MODULE_INFO, MODULES, type Module, formatBits } from '@dw/shared';
@@ -51,6 +51,7 @@ export function navItems(me: Me): NavItem[] {
     out.push({ path: info.path, label: info.label, emoji: info.emoji });
   }
   if (me.access.modules.exchange && !seen.has('/portfolio')) out.push({ path: '/portfolio', label: 'Portfolio', emoji: '💼' });
+  if (me.flags?.realPackages) out.push({ path: '/packages', label: 'Packages', emoji: '📦' });
   out.push({ path: '/profile', label: 'Profile', emoji: '🪪' });
   if (me.account.role === 'COMPANY_ADMIN' || me.access.viewAs || me.account.role === 'OWNER') out.push({ path: '/company', label: 'Company', emoji: '⚙️' });
   out.push({ path: '/settings', label: t('nav.settings'), emoji: '🎛️' });
@@ -73,6 +74,7 @@ export function GameLayout() {
   const me = useGameMe();
   const base = useBase();
   const nav = useMemo(() => navItems(me), [me]);
+  const location = useLocation();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const balance = useStore((s) => s.balance);
@@ -231,7 +233,8 @@ export function GameLayout() {
           {t('offline.claim')}
         </button>
       </Modal>
-      {!me.access.viewAs && <Tutorial />}
+      {/* a package link from a real-life card opens first; the tour waits until they move on */}
+      {!me.access.viewAs && !location.pathname.includes('/redeem/') && <Tutorial />}
     </motion.div>
   );
 }

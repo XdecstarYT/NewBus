@@ -126,6 +126,7 @@ export const EXTRA_FLAGS = [
   'insurance',
   'maintenance',
   'chatKillSwitch',
+  'realPackages',
 ] as const;
 export type ExtraFlag = (typeof EXTRA_FLAGS)[number];
 export type FeatureFlag = Module | ExtraFlag;

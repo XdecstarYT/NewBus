@@ -81,6 +81,17 @@ A brand-new server sets itself up automatically: database, the 210 industries, t
 4. **Flags & settings**: switch whole features on or off for everyone, change economy numbers live, post an announcement, or put the game in maintenance (read-only) mode.
 5. **Economy / Market / Social / Moderation**: watch inflation, approve IPOs, start Business Wars and trade fairs, and handle chat reports.
 
+### 📦 Real-life packages (QR cards)
+
+Hand out real, physical rewards: **Owner Control Panel → 📦 Packages**.
+
+1. Choose what's inside: Bits, recruit pods, decor or pets, or a temporary income boost. You can also make it a ❓ mystery.
+2. Choose how many cards, how many times each card can be opened (1 = first finder wins), an optional expiry date, and optionally lock it to one company.
+3. Click **Print cards**, cut them out, then give them away, hide them, or tuck them into a real present.
+4. A player scans the QR code with their phone camera. The game opens, they log in if needed, and they unbox it. They can also type the code under **📦 Packages**.
+
+Print from the game's real address (your Wi-Fi address or hosted URL), not `localhost`, so the QR codes work on other people's phones. Bits come from the Treasury, codes are random, and wrong guesses are limited. **Packages** shows who opened what, and **Void** kills a batch of codes. To turn the whole feature off: **Flags & settings → Real-life packages**.
+
 ### Changing the owner password
 
 - In the game: log in as the owner → **🔑 My account** tab → **Change your password**. You can also turn on two-factor login codes there. Players change theirs under **Settings**.

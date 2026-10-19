@@ -823,6 +823,47 @@ export const mentorships = sqliteTable('mentorships', {
   endedAt: ts('ended_at'),
 });
 
+export interface PackageContents {
+  bits?: number;
+  pods?: Array<{ type: string; count: number }>;
+  items?: string[];
+  boost?: { mult: number; minutes: number };
+}
+
+/** Real-life packages: printable cards with a code/QR that players redeem in the game. */
+export const realPackages = sqliteTable(
+  'real_packages',
+  {
+    id: text('id').primaryKey(),
+    code: text('code').notNull(),
+    batchId: text('batch_id').notNull(),
+    name: text('name').notNull(),
+    emoji: text('emoji').notNull(),
+    message: text('message').notNull().default(''),
+    contents: json<PackageContents>('contents').notNull(),
+    mystery: bool('mystery').notNull().default(false),
+    maxClaims: integer('max_claims').notNull().default(1),
+    claims: integer('claims').notNull().default(0),
+    targetCompanyId: text('target_company_id'),
+    expiresAt: ts('expires_at'),
+    status: text('status').notNull(), // active | void
+    createdBy: text('created_by'),
+    createdAt: ts('created_at').notNull(),
+  },
+  (t) => [uniqueIndex('real_packages_code_idx').on(t.code)],
+);
+
+export const packageClaims = sqliteTable(
+  'package_claims',
+  {
+    packageId: text('package_id').notNull(),
+    companyId: text('company_id').notNull(),
+    accountId: text('account_id').notNull(),
+    createdAt: ts('created_at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.packageId, t.companyId] })],
+);
+
 export const chatMessages = sqliteTable(
   'chat_messages',
   {

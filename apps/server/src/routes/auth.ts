@@ -17,7 +17,7 @@ import { audit } from '../services/audit';
 
 export function publicFlags() {
   const f = getFlags();
-  return { maintenance: f.maintenance, lotto: f.lotto, chatKillSwitch: f.chatKillSwitch, tradeFairs: f.tradeFairs, insurance: f.insurance, peerLending: f.peerLending, mentorship: f.mentorship, shorting: f.shorting };
+  return { maintenance: f.maintenance, lotto: f.lotto, chatKillSwitch: f.chatKillSwitch, tradeFairs: f.tradeFairs, insurance: f.insurance, peerLending: f.peerLending, mentorship: f.mentorship, shorting: f.shorting, realPackages: f.realPackages };
 }
 
 export function mePayload(accountId: string, viewAs?: string | null) {

@@ -14,6 +14,8 @@
 - **Play for real (deploy):** first start on an empty database seeds itself (owner, catalog, Treasury); demo logins off in production (`SEED_DEMO`); owner must replace "Diddy" on first production login; `npm run play` for home/Wi-Fi play; Dockerfile + docker-compose + Render blueprint (`render.yaml`, persistent disk); https-only headers only when `COOKIE_SECURE=true` (plain-http Wi-Fi play works); owner "My account" tab (password + 2FA); README with the three ways to play. Verified: Docker image boots a fresh production game, owner -> builder -> badge -> player on a phone viewport, and a second device joining over the network address with live WebSocket updates.
 - Balance tweak: the starter room has no upkeep (`workplaces.upkeepPerTick` floors), so a new company can't start in the red.
 
+- **Real-life packages (flag `realPackages`):** owner packs batches of printable QR cards (Bits from the Treasury, free pods, decor/pets, timed income boost, mystery mode; cards x openings per card, expiry, optional target company), prints them, voids them and sees who opened what. Players scan with the phone camera (QR -> `/redeem/<code>` -> login -> unboxing) or type the code; in-app camera scanning where the browser has BarcodeDetector. Unambiguous 8-char codes, wrong-guess limit per account per hour, atomic claim (no double opening). Tested in `packages.test.ts` and end to end in a browser (print sheet, phone scan link, second finder sees "used up").
+
 ## In progress
 - Phase 9 - Mini-games, research, achievements, quests, seasons, battle pass.
 

@@ -47,6 +47,7 @@ export function createApp() {
         },
       },
       strictTransportSecurity: env.cookieSecure,
+      crossOriginOpenerPolicy: env.cookieSecure,
       crossOriginEmbedderPolicy: false,
     }),
   );

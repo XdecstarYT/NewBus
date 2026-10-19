@@ -162,6 +162,7 @@ const FLAG_INFO: Record<string, string> = {
   insurance: '☂️ Insurance',
   maintenance: '🛠️ Maintenance (read-only) mode',
   chatKillSwitch: '🔇 Chat kill switch',
+  realPackages: '📦 Real-life packages (QR cards)',
 };
 export function Flags() {
   const flags = useApi<Record<string, boolean>>(['owner-flags'], '/owner/flags');

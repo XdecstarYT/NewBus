@@ -41,6 +41,7 @@ import { warTick, autoScheduleWar } from './services/wars';
 import { fairTick, autoFair } from './services/fairs';
 import { onMenteeLevelUp } from './services/mentorship';
 import { newsTick } from './services/newsgen';
+import { registerPackageRoutes } from './routes/packages';
 
 export function loadFeatures() {
   onLevelUp((companyId, level) => {
@@ -120,5 +121,6 @@ export function loadFeatures() {
   registerJob('auto-war', Math.max(60_000, cfg().wars.autoScheduleEveryMs || 6 * 3600_000), () => cfg().wars.autoScheduleEveryMs && autoScheduleWar());
   registerJob('auto-fair', Math.max(60_000, cfg().tradeFairs.everyMs || 4 * 3600_000), () => cfg().tradeFairs.everyMs && autoFair());
   registerJob('prune-chat', 6 * 3600_000, () => pruneChat());
+  registerPackageRoutes();
   void eq;
 }
