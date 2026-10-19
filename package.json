@@ -13,6 +13,7 @@
     "migrate": "npm run migrate -w apps/server",
     "build": "npm run build -w apps/web",
     "start": "npm run start -w apps/server",
+    "play": "npm run build && npm run start",
     "test": "npm run test -w apps/server",
     "test:e2e": "npm run test:e2e -w apps/web",
     "typecheck": "tsc -p packages/shared --noEmit && tsc -p apps/server --noEmit && tsc -p apps/web --noEmit",

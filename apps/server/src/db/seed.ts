@@ -18,8 +18,18 @@ import { createCompany } from '../services/companies';
 import { runSeedHooks } from './seed-hooks';
 
 export function seedAll(opts: { demo?: boolean; quiet?: boolean } = {}) {
-  const say = (s: string) => !opts.quiet && console.log(s);
   bootstrap();
+  seedData(opts);
+}
+
+/** True when the database has never been seeded (no owner yet). */
+export function needsSeed() {
+  return !db.select({ id: schema.accounts.id }).from(schema.accounts).where(eq(schema.accounts.role, 'OWNER')).get();
+}
+
+/** Seed an already-open database (idempotent). */
+export function seedData(opts: { demo?: boolean; quiet?: boolean } = {}) {
+  const say = (s: string) => !opts.quiet && console.log(s);
 
   // Fund the Treasury and NPC demand pool once.
   if (balanceOf(SYS.TREASURY) === 0 && balanceOf(SYS.MINT) === 0) {
@@ -39,7 +49,10 @@ export function seedAll(opts: { demo?: boolean; quiet?: boolean } = {}) {
   const hasOwner = db.select({ id: schema.accounts.id }).from(schema.accounts).where(eq(schema.accounts.role, 'OWNER')).get();
   if (!hasOwner) {
     if (getAccountByNumber(env.ownerAccountNumber)) throw new Error(`Account ${env.ownerAccountNumber} exists but is not the owner.`);
-    createAccount({ role: 'OWNER', accountNumber: env.ownerAccountNumber, password: env.ownerPassword, displayName: 'The Owner' });
+    // In production the weak default password must be changed on the first login.
+    const weak = env.isProduction && env.ownerPassword === 'Diddy';
+    createAccount({ role: 'OWNER', accountNumber: env.ownerAccountNumber, password: env.ownerPassword, displayName: 'The Owner', mustChangePassword: weak });
+    if (weak) say('⚠️  Production mode: the owner must change the default password on first login.');
     say(`👑 Owner account created: ${env.ownerAccountNumber} / ${'*'.repeat(env.ownerPassword.length)} (change this password before going public!)`);
   } else say('👑 Owner already exists - leaving it alone.');
 
@@ -86,6 +99,6 @@ export function seedAll(opts: { demo?: boolean; quiet?: boolean } = {}) {
 // Run when executed directly (`npm run seed`).
 const isMain = process.argv[1] && /seed\.(ts|js)$/.test(process.argv[1]);
 if (isMain) {
-  seedAll();
+  seedAll({ demo: env.seedDemo });
   closeDb();
 }

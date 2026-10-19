@@ -42,8 +42,11 @@ export function createApp() {
           fontSrc: ["'self'", 'data:'],
           objectSrc: ["'none'"],
           frameAncestors: ["'none'"],
+          // Only force https when the game is served over https; plain-http Wi-Fi play would break otherwise.
+          upgradeInsecureRequests: env.cookieSecure ? [] : null,
         },
       },
+      strictTransportSecurity: env.cookieSecure,
       crossOriginEmbedderPolicy: false,
     }),
   );

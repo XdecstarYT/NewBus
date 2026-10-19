@@ -8,6 +8,7 @@ import { CatalogManager } from './Catalog';
 import { MarketAdmin } from './Market';
 import { SocialAdmin } from './Social';
 import { ModerationCenter } from './Moderation';
+import { MyAccount } from './MyAccount';
 
 export const ownerRoutes: Array<{ path: string; label?: string; element: ReactNode }> = [
   { path: '', label: '🏠 Overview', element: <Overview /> },
@@ -24,4 +25,5 @@ export const ownerRoutes: Array<{ path: string; label?: string; element: ReactNo
   { path: 'flags', label: '🎚️ Flags & settings', element: <Flags /> },
   { path: 'ledger', label: '📒 Ledger', element: <Ledger /> },
   { path: 'audit', label: '📝 Audit', element: <AuditLog /> },
+  { path: 'account', label: '🔑 My account', element: <MyAccount /> },
 ];

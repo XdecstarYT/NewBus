@@ -65,7 +65,8 @@ export const economy = {
     unlockCost: [0, 2500, 15000, 60000, 250000],
     unlockLevel: [1, 3, 6, 10, 15],
     upgradeCost: (kind: number, level: number) => Math.round((400 + kind * 900) * Math.pow(2.1, level)),
-    upkeepPerTick: (kind: number, level: number) => Math.round((1 + kind) * level * 0.5),
+    // floor: the starter room (kind 0, level 1) is upkeep-free so new companies never start in the red
+    upkeepPerTick: (kind: number, level: number) => Math.floor((1 + kind) * level * 0.5),
   },
 
   boost: {
