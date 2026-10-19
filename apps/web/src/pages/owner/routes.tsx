@@ -11,6 +11,7 @@ import { ModerationCenter } from './Moderation';
 import { MyAccount } from './MyAccount';
 import { PackagesAdmin } from './Packages';
 import { ChaosControls } from './Chaos';
+import { Backups, AntiCheat, Analytics } from './Ops';
 
 export const ownerRoutes: Array<{ path: string; label?: string; element: ReactNode }> = [
   { path: '', label: '🏠 Overview', element: <Overview /> },
@@ -21,6 +22,9 @@ export const ownerRoutes: Array<{ path: string; label?: string; element: ReactNo
   { path: 'market', label: '📈 Market', element: <MarketAdmin /> },
   { path: 'social', label: '🤝 Social', element: <SocialAdmin /> },
   { path: 'chaos', label: '🌪️ Chaos & Seasons', element: <ChaosControls /> },
+  { path: 'analytics', label: '📊 Analytics', element: <Analytics /> },
+  { path: 'anticheat', label: '🕵️ Anti-cheat', element: <AntiCheat /> },
+  { path: 'backups', label: '💾 Backups', element: <Backups /> },
   { path: 'packages', label: '📦 Packages', element: <PackagesAdmin /> },
   { path: 'moderation', label: '🛡️ Moderation', element: <ModerationCenter /> },
   { path: 'catalog', label: '📚 Catalog', element: <CatalogManager /> },

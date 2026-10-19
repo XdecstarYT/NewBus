@@ -43,6 +43,10 @@ import { onMenteeLevelUp } from './services/mentorship';
 import { newsTick } from './services/newsgen';
 import { registerPackageRoutes } from './routes/packages';
 import { registerMegaRoutes } from './routes/mega';
+import { registerOpsRoutes } from './routes/ops';
+import { createBackup } from './services/ops';
+import { env } from './env';
+import { log } from './lib/log';
 import { researchTick } from './services/research';
 import { goalsTick, achievementSweep, loadSeason, checkAchievements } from './services/goals';
 
@@ -132,5 +136,11 @@ export function loadFeatures() {
   registerGlobalHook('achievements', 60_000, achievementSweep);
   onLevelUp((companyId) => checkAchievements(companyId));
   loadSeason();
+  registerOpsRoutes();
+  if (env.databasePath !== ':memory:' && env.backupEveryHours > 0) {
+    registerJob('scheduled-backup', env.backupEveryHours * 3600_000, () => {
+      createBackup('auto').catch((e) => log.error('scheduled backup failed', { err: String(e) }));
+    });
+  }
   void eq;
 }

@@ -23,6 +23,8 @@ export const env = {
   cookieSecure: process.env.COOKIE_SECURE === 'true',
   backupDir: resolveFromRepo(process.env.BACKUP_DIR ?? './backups'),
   backupKeep: Number(process.env.BACKUP_KEEP ?? 10),
+  /** automatic backup interval (0 = off) */
+  backupEveryHours: Number(process.env.BACKUP_EVERY_HOURS ?? 6),
   logLevel: (process.env.LOG_LEVEL ?? 'info') as 'debug' | 'info' | 'warn' | 'error',
   isTest: process.env.NODE_ENV === 'test' || !!process.env.VITEST,
   isProduction: process.env.NODE_ENV === 'production',
