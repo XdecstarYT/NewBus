@@ -10,7 +10,7 @@ import { MINIGAMES, MINIGAME_IDS } from '@dw/shared';
 import { db, schema, atomic, sqlite } from '../db';
 import { clock } from '../lib/time';
 import { newId } from '../lib/ids';
-import { badRequest, conflict, forbidden, notFound } from '../lib/errors';
+import { conflict, forbidden, notFound } from '../lib/errors';
 import { cfg } from './settings';
 import { SYS, balanceOf } from './ledger';
 import { payCompany } from './money';
@@ -115,7 +115,7 @@ export function finishGame(companyId: string, accountId: string, sessionId: stri
     let reason: string | null = null;
     if (elapsed < c.minDurationMs) [flagged, reason] = [true, 'too fast'];
     else if (elapsed > c.maxDurationMs + 30_000) reason = 'Game timed out (too long). No Bits this time.';
-    else if (score > maxPts) [flagged, reason] = [true, 'implausible score'];
+    else if (s.game !== 'quiz-show' && score > maxPts) [flagged, reason] = [true, 'implausible score'];
     let payout = 0;
     if (!reason) {
       const co = getCompany(companyId);

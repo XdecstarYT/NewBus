@@ -20,6 +20,10 @@ import { Guilds } from './Guilds';
 import { Wars } from './Wars';
 import { Leaderboard, PublicProfile } from './Leaderboard';
 import { Packages } from './Packages';
+import { Arcade } from './Arcade';
+import { Research } from './Research';
+import { Achievements } from './Achievements';
+import { Quests } from './Quests';
 
 /** Renders the page only if the module is enabled for this login; otherwise a funny lock screen. */
 function Guard({ module, children }: { module?: Module; children: ReactNode }) {
@@ -51,6 +55,10 @@ export const gameRoutes: Array<{ path: string; element: ReactNode }> = [
   { path: '/wars', element: g('wars', <Wars />) },
   { path: '/leaderboard', element: g('leaderboard', <Leaderboard />) },
   { path: '/profiles/:id', element: g(undefined, <PublicProfile />) },
+  { path: '/minigames', element: g('minigames', <Arcade />) },
+  { path: '/research', element: g('research', <Research />) },
+  { path: '/achievements', element: g('achievements', <Achievements />) },
+  { path: '/quests', element: g(undefined, <Quests />) },
   { path: '/packages', element: g(undefined, <Packages />) },
   { path: '/redeem/:code', element: g(undefined, <Packages />) },
   { path: '/profile', element: g(undefined, <Profile />) },

@@ -9,7 +9,7 @@ import { LoadingJoke, Toasts, Floaters, Confetti, ConfirmProvider } from './comp
 import { BossByteBubble } from './components/BossByte';
 import { useStore } from './lib/store';
 import { connectWs, disconnectWs, onWs } from './lib/ws';
-import { setMusic } from './lib/sound';
+import { setMusic, sfx } from './lib/sound';
 import { GameLayout, MeContext } from './pages/game/GameLayout';
 import { gameRoutes } from './pages/game/routes';
 import { OwnerLayout } from './pages/owner/OwnerLayout';
@@ -37,6 +37,7 @@ function LiveEffect() {
   const qc = useQueryClient();
   const say = useStore((s) => s.say);
   const toast = useStore((s) => s.toast);
+  const confetti = useStore((s) => s.confetti);
   useEffect(() => {
     connectWs();
     const offs = [
@@ -47,6 +48,19 @@ function LiveEffect() {
       onWs('company', () => qc.invalidateQueries()),
       onWs('logout', () => window.location.reload()),
       onWs('boss', (m) => say(m.text, m.mood ?? 'wow')),
+      onWs('achievement', (m) => {
+        sfx.levelUp();
+        confetti();
+        toast(`Achievement unlocked: ${m.name}! New title "${m.title}"${m.reward ? ` (+${m.reward} BT)` : ''}`, 'good', m.emoji);
+        qc.invalidateQueries({ queryKey: ['achievements'] });
+      }),
+      onWs('chaos', (m) => {
+        if (m.kind === 'credit-rain') {
+          sfx.bigCoin();
+          confetti();
+        }
+        qc.invalidateQueries({ queryKey: ['state'] });
+      }),
       onWs('broadcast', (m) => {
         say(`📣 ${m.text}`, 'wow');
         toast(m.text, 'info', '📣');
@@ -56,7 +70,7 @@ function LiveEffect() {
       offs.forEach((o) => o());
       disconnectWs();
     };
-  }, [qc, say, toast]);
+  }, [qc, say, toast, confetti]);
   return null;
 }
 

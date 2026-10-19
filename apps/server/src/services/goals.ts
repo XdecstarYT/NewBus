@@ -39,11 +39,22 @@ function giveItem(companyId: string, key: string) {
 }
 
 // ------------------------------------------------------------ collection book
+/** Companies that existed before the book get their current workers filled in once. */
+function backfillCollection(companyId: string) {
+  if (getStat(companyId, 'colinit')) return;
+  sqlite
+    .prepare(`INSERT INTO stats (company_id, key, value) SELECT company_id, 'col:' || species || ':' || rarity, COUNT(*) FROM workers WHERE company_id = ? GROUP BY species, rarity ON CONFLICT(company_id, key) DO NOTHING`)
+    .run(companyId);
+  sqlite.prepare(`INSERT INTO stats (company_id, key, value) VALUES (?, 'colinit', 1) ON CONFLICT(company_id, key) DO NOTHING`).run(companyId);
+}
+
 export function collectionCount(companyId: string) {
+  backfillCollection(companyId);
   return (sqlite.prepare(`SELECT COUNT(*) n FROM stats WHERE company_id = ? AND key LIKE 'col:%' AND value > 0`).get(companyId) as { n: number }).n;
 }
 
 export function collectionView(companyId: string) {
+  backfillCollection(companyId);
   const rows = sqlite.prepare(`SELECT key, value FROM stats WHERE company_id = ? AND key LIKE 'col:%'`).all(companyId) as Array<{ key: string; value: number }>;
   const have = new Map(rows.map((r) => [r.key.slice(4), r.value]));
   const grid = SPECIES.map((sp) => ({ species: sp, cells: RARITIES.map((r) => ({ rarity: r, count: have.get(`${sp}:${r}`) ?? 0 })) }));
@@ -112,7 +123,7 @@ export function achievementsView(companyId: string) {
       target: a.target,
       progress: at ? a.target : hidden ? 0 : Math.min(a.target, progressOf(companyId, a, co, unlocked.size)),
       unlockedAt: at,
-      group: a.kind === 'stat' ? a.stat : a.kind,
+      group: a.secret ? 'secret' : a.kind === 'stat' ? a.stat : a.kind,
     };
   });
   return { list, unlocked: unlocked.size, total: ACHIEVEMENTS.length, title: co.title, titles: titlesOf(companyId) };

@@ -16,12 +16,20 @@
 
 - **Real-life packages (flag `realPackages`):** owner packs batches of printable QR cards (Bits from the Treasury, free pods, decor/pets, timed income boost, mystery mode; cards x openings per card, expiry, optional target company), prints them, voids them and sees who opened what. Players scan with the phone camera (QR -> `/redeem/<code>` -> login -> unboxing) or type the code; in-app camera scanning where the browser has BarcodeDetector. Unambiguous 8-char codes, wrong-guess limit per account per hour, atomic claim (no double opening). Tested in `packages.test.ts` and end to end in a browser (print sheet, phone scan link, second finder sees "used up").
 
+- **Phase 9 + chaos controls - "The Big Byte Update":**
+  - **Arcade:** 12 playable mini-games (Debug Rush, Coffee Run, Email Sorter, Meme Maker, Server Whack, Invoice Match, Stock Sprint, Box Stack, Pizza Rush, Parking Panic, Cable Untangle, Quiz Show). Server-timed sessions, a points-per-second cheat check (flags go to anti-cheat), Quiz Show graded on the server, payouts from the Treasury capped per play and per day, personal bests and per-game high-score tables.
+  - **Research:** 5 branches x 6 nodes with levels. Research Points come from every company plus THINKER workers. Effects plug into the multiplier registry (income, traffic, speed, quality, morale, wages, arcade payouts, offline hours, pod pity).
+  - **Achievements:** 253 achievements (29 stat ladders x 8 tiers, plus levels, collection, prestige, meta and secret ones). Each pays from the Treasury and grants a title players can wear on their profile; live pop-up on unlock.
+  - **Quests:** 3 daily + 3 weekly, picked to fit the company's enabled modules and scaled by level.
+  - **Seasons:** owner season manager, season leaderboard via `s:<id>:` stat twins, a free 30-tier cosmetic-only pass (titles, 8 pass-exclusive cosmetics, decor), top-10 Treasury prizes, top-3 titles, Hall of Fame.
+  - **Collection book:** species x rarity, backfilled for older companies.
+  - **Owner Chaos Controls:** Credit Rain, Double-Bits (x1.5/x2/x3), spawn a Legendary, market crash/boom, Boss Byte broadcast (optionally into the Daily Byte), trigger office events for one company or everyone.
+
 ## In progress
-- Phase 9 - Mini-games, research, achievements, quests, seasons, battle pass.
+- Phase 10 - juice polish, accessibility pass, localization.
 
 ## Next
-- Phases 10-12 per `docs/SPEC.md` section 24.
-- Mini-Games / Achievements / Research nav entries are hidden (`UNBUILT` in `GameLayout.tsx`) until Phase 9 ships their pages.
+- Phases 11-12 per `docs/SPEC.md` section 24: backups (one-click + scheduled), anti-cheat dashboard, analytics, economy simulation (500+ bots), load test, Playwright e2e suite, GitHub Actions CI.
 
 ## Decisions / defaults
 - **SQLite via better-sqlite3 (synchronous).** Every service call runs to completion; `atomic()` wraps multi-step writes in a real transaction. Schema stays Postgres-ready (text ids, integer money, JSON as text).

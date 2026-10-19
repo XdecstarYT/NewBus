@@ -10,6 +10,7 @@ import { SocialAdmin } from './Social';
 import { ModerationCenter } from './Moderation';
 import { MyAccount } from './MyAccount';
 import { PackagesAdmin } from './Packages';
+import { ChaosControls } from './Chaos';
 
 export const ownerRoutes: Array<{ path: string; label?: string; element: ReactNode }> = [
   { path: '', label: '🏠 Overview', element: <Overview /> },
@@ -19,6 +20,7 @@ export const ownerRoutes: Array<{ path: string; label?: string; element: ReactNo
   { path: 'economy', label: '📊 Economy', element: <EconomyHealth /> },
   { path: 'market', label: '📈 Market', element: <MarketAdmin /> },
   { path: 'social', label: '🤝 Social', element: <SocialAdmin /> },
+  { path: 'chaos', label: '🌪️ Chaos & Seasons', element: <ChaosControls /> },
   { path: 'packages', label: '📦 Packages', element: <PackagesAdmin /> },
   { path: 'moderation', label: '🛡️ Moderation', element: <ModerationCenter /> },
   { path: 'catalog', label: '📚 Catalog', element: <CatalogManager /> },

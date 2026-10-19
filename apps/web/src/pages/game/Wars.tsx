@@ -24,14 +24,14 @@ function Board({ war }: { war: any }) {
 }
 
 function WarCard({ war, children }: { war: any; children?: React.ReactNode }) {
-  const now = useNow(1000);
+  useNow(1000); // re-render so countdowns tick
   return (
     <div className={`card flex flex-col gap-2 ${war.mine ? 'ring-2 ring-accent' : ''}`}>
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-2xl">{war.contestInfo.emoji}</span>
         <b className="flex-1">{war.name}</b>
-        {war.status === 'active' && <span className="chip">⏱️ {timeLeft(war.endsAt - now)}</span>}
-        {war.status === 'scheduled' && <span className="chip">Starts in {timeLeft(war.startsAt - now)}</span>}
+        {war.status === 'active' && <span className="chip">⏱️ {timeLeft(war.endsAt)}</span>}
+        {war.status === 'scheduled' && <span className="chip">Starts in {timeLeft(war.startsAt)}</span>}
         {war.status === 'finished' && <span className="chip">{timeAgo(war.endsAt)}</span>}
       </div>
       <p className="text-xs muted">{war.contestInfo.name}: most {war.contestInfo.unit} wins {formatBits(war.prize)} · consolation {formatBits(war.consolation)}</p>
@@ -130,7 +130,7 @@ function WarsTab() {
 
 function FairsTab() {
   const me = useGameMe();
-  const now = useNow(1000);
+  useNow(1000); // re-render so countdowns tick
   const q = useApi<any>(['fairs'], '/game/fairs', { refetchInterval: 20_000 });
   const prods = useApi<any>(['products'], '/game/products');
   const [pick, setPick] = useState({ productId: '', qty: 10 });
@@ -145,7 +145,7 @@ function FairsTab() {
         <EmptyState emoji="🎪" title="No fair right now" body="Fairs pop up every few hours. Stock up on your best products!" />
       ) : (
         <div className="card flex flex-col gap-2">
-          <div className="flex items-center gap-2 flex-wrap"><b className="text-lg flex-1">🎪 {d.fair.name}</b><span className="chip">⏱️ {timeLeft(d.fair.endsAt - now)}</span></div>
+          <div className="flex items-center gap-2 flex-wrap"><b className="text-lg flex-1">🎪 {d.fair.name}</b><span className="chip">⏱️ {timeLeft(d.fair.endsAt)}</span></div>
           <p className="text-sm">Booth fee {formatBits(d.fair.boothFee)}. Units sell at {Math.round(d.config.priceBonus * 100)}% of base price. Top 3 booths split {formatBits(d.fair.prizePool)} and gain reputation. {d.fair.theme !== 'any' && <>Theme bonus for <b>{d.fair.theme}</b> products!</>}</p>
           {!d.myBooth ? (
             <div className="flex gap-2 flex-wrap items-end">

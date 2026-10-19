@@ -17,7 +17,7 @@ export function registerMegaRoutes() {
     a.get('/', h((req) => mg.arcadeView(companyOf(req))));
     a.post('/:game/start', h((req) => mg.startGame(companyOf(req), req.params.game)));
     a.post('/finish', h((req) => {
-      const v = parse(z.object({ sessionId: z.string().max(64), score: z.number().int().min(0).max(1_000_000), answers: z.array(z.number().int().min(0).max(9)).max(20).optional() }), req.body);
+      const v = parse(z.object({ sessionId: z.string().max(64), score: z.number().int().min(0).max(1_000_000), answers: z.array(z.number().int().min(-1).max(9)).max(20).optional() }), req.body);
       return mg.finishGame(companyOf(req), ctx(req).account.id, v.sessionId, v);
     }));
     a.get('/:game/leaders', h((req) => (MINIGAME_IDS.includes(req.params.game as any) ? mg.arcadeLeaders(req.params.game) : [])));
