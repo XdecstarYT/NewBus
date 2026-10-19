@@ -16,8 +16,11 @@ const resolveFromRepo = (p: string) => (path.isAbsolute(p) ? p : path.resolve(RE
 export const env = {
   port: Number(process.env.PORT ?? 3000),
   databasePath: process.env.DATABASE_PATH === ':memory:' ? ':memory:' : resolveFromRepo(process.env.DATABASE_PATH ?? './data/digital-workforce.db'),
-  ownerAccountNumber: process.env.OWNER_ACCOUNT_NUMBER ?? '01',
-  ownerPassword: process.env.OWNER_PASSWORD ?? 'Diddy',
+  // blank values (e.g. an empty box in a hosting dashboard) fall back to the defaults
+  ownerAccountNumber: process.env.OWNER_ACCOUNT_NUMBER?.trim() || '01',
+  ownerPassword: process.env.OWNER_PASSWORD?.trim() || 'Diddy',
+  /** recovery: set to true for one start to reset the owner's password to OWNER_PASSWORD */
+  ownerReset: process.env.OWNER_RESET_PASSWORD === 'true',
   appSecret: process.env.APP_SECRET ?? 'dev-secret-change-me',
   corsOrigins: [...(process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://localhost:3000').split(','), process.env.PUBLIC_URL ?? '', process.env.RENDER_EXTERNAL_URL ?? ''].map((s) => s.trim().replace(/\/$/, '')).filter(Boolean),
   cookieSecure: process.env.COOKIE_SECURE === 'true',

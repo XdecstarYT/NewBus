@@ -107,7 +107,9 @@ export function login(accountNumber: string, password: string, totp: string | un
     const mins = Math.ceil((acc.lockedUntil - now) / MINUTE_MS);
     throw new GameError(423, 'locked', `Too many wrong guesses. The badge scanner is cooling off for ${mins} more minute(s).`);
   }
-  if (!checkPassword(password, acc.passwordHash)) {
+  // phones sometimes autofill a trailing space; accept the trimmed password too
+  const ok = checkPassword(password, acc.passwordHash) || (password !== password.trim() && checkPassword(password.trim(), acc.passwordHash));
+  if (!ok) {
     const failed = acc.failedLogins + 1;
     const lock = failed >= MAX_FAILED_LOGINS;
     db.update(schema.accounts)

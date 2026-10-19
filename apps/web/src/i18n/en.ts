@@ -12,6 +12,8 @@ export const en = {
   'login.noSignup': 'There is no sign-up. Badges are hand-made by the Owner.',
   'pw.title': 'New badge, new password!',
   'pw.subtitle': 'The Owner gave you a temporary password. Pick your own secret word.',
+  'pw.ownerTitle': 'Welcome, Owner! One quick step',
+  'pw.ownerSubtitle': 'You logged in with the default password. Pick a new one so nobody else can run your game. Type "Diddy" (or your current password) in the first box.',
   'pw.current': 'Temporary password',
   'pw.new': 'New password',
   'pw.confirm': 'Type it again',

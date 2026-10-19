@@ -10,7 +10,7 @@ import { PERMISSION_PRESETS } from '@dw/shared';
 import { bootstrap } from '../bootstrap';
 import { db, schema, closeDb } from './index';
 import { env } from '../env';
-import { createAccount, getAccountByNumber } from '../services/auth';
+import { createAccount, getAccountByNumber, checkPassword, resetPassword } from '../services/auth';
 import { SYS, post, balanceOf } from '../services/ledger';
 import { economy } from '../config/economy';
 import { seedTemplates } from '../services/owner';
@@ -25,6 +25,24 @@ export function seedAll(opts: { demo?: boolean; quiet?: boolean } = {}) {
 /** True when the database has never been seeded (no owner yet). */
 export function needsSeed() {
   return !db.select({ id: schema.accounts.id }).from(schema.accounts).where(eq(schema.accounts.role, 'OWNER')).get();
+}
+
+/**
+ * Make sure the owner can always get in. Runs on every start:
+ *  - an owner created with an empty password (blank OWNER_PASSWORD in a hosting
+ *    dashboard) is repaired to OWNER_PASSWORD (default "Diddy")
+ *  - OWNER_RESET_PASSWORD=true resets the owner's password to OWNER_PASSWORD and
+ *    unlocks the badge (remove the variable again afterwards)
+ */
+export function ensureOwnerAccess(say: (s: string) => void = console.log) {
+  const owner = db.select().from(schema.accounts).where(eq(schema.accounts.role, 'OWNER')).get();
+  if (!owner) return;
+  const emptyPassword = checkPassword('', owner.passwordHash);
+  if (emptyPassword || env.ownerReset) {
+    resetPassword(owner.id, owner.id, env.ownerPassword, env.isProduction && env.ownerPassword === 'Diddy');
+    db.update(schema.accounts).set({ status: 'active', totpEnabled: env.ownerReset ? false : owner.totpEnabled }).where(eq(schema.accounts.id, owner.id)).run();
+    say(`🔑 Owner password ${emptyPassword ? 'was empty - repaired' : 'reset'}: log in as ${owner.accountNumber} with OWNER_PASSWORD${env.ownerPassword === 'Diddy' ? ' ("Diddy")' : ''}.`);
+  }
 }
 
 /** Seed an already-open database (idempotent). */

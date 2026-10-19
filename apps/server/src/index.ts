@@ -7,7 +7,7 @@ import { startTicker, stopTicker } from './services/tick';
 import { closeDb } from './db';
 import { log } from './lib/log';
 import { startScheduledJobs, stopScheduledJobs } from './jobs';
-import { needsSeed, seedData } from './db/seed';
+import { needsSeed, seedData, ensureOwnerAccess } from './db/seed';
 
 bootstrap();
 // First start on a fresh server: create the owner, templates and starter world automatically.
@@ -15,6 +15,7 @@ if (needsSeed()) {
   log.info('fresh database - seeding', { demo: env.seedDemo });
   seedData({ demo: env.seedDemo });
 }
+ensureOwnerAccess();
 if (env.isProduction && env.appSecret === 'dev-secret-change-me') {
   log.warn('APP_SECRET is not set - set a long random APP_SECRET in production!');
 }

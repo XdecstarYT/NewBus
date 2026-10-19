@@ -74,7 +74,7 @@ export function authRouter() {
     h((req, res) => {
       const body = parse(loginSchema, req.body);
       const { token, account } = login(body.accountNumber, body.password, body.totp, { ip: req.ip, userAgent: req.get('user-agent') });
-      res.cookie(SESSION_COOKIE, token, { httpOnly: true, sameSite: 'strict', secure: env.cookieSecure, maxAge: SESSION_TTL_MS, path: '/' });
+      res.cookie(SESSION_COOKIE, token, { httpOnly: true, sameSite: 'strict', secure: req.secure, maxAge: SESSION_TTL_MS, path: '/' });
       return mePayload(account.id);
     }),
   );

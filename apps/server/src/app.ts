@@ -30,7 +30,10 @@ export function createApp() {
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
 
-  app.use(
+  // Security headers. The https-only ones (HSTS, upgrade-insecure-requests, COOP) are sent only
+  // when the request really arrived over https, so plain-http play (home Wi-Fi) can never be
+  // locked out by a wrong COOKIE_SECURE setting.
+  const securityHeaders = (https: boolean) =>
     helmet({
       contentSecurityPolicy: {
         directives: {
@@ -42,15 +45,16 @@ export function createApp() {
           fontSrc: ["'self'", 'data:'],
           objectSrc: ["'none'"],
           frameAncestors: ["'none'"],
-          // Only force https when the game is served over https; plain-http Wi-Fi play would break otherwise.
-          upgradeInsecureRequests: env.cookieSecure ? [] : null,
+          upgradeInsecureRequests: https ? [] : null,
         },
       },
-      strictTransportSecurity: env.cookieSecure,
-      crossOriginOpenerPolicy: env.cookieSecure,
+      strictTransportSecurity: https,
+      crossOriginOpenerPolicy: https,
       crossOriginEmbedderPolicy: false,
-    }),
-  );
+    });
+  const httpsHeaders = securityHeaders(true);
+  const httpHeaders = securityHeaders(false);
+  app.use((req, res, next) => (req.secure ? httpsHeaders : httpHeaders)(req, res, next));
 
   // Strict CORS: only configured origins, with credentials.
   app.use((req, res, next) => {
@@ -85,7 +89,7 @@ export function createApp() {
     let token = req.cookies?.[CSRF_COOKIE];
     if (!token) {
       token = randomToken(18);
-      res.cookie(CSRF_COOKIE, token, { httpOnly: false, sameSite: 'strict', secure: env.cookieSecure, path: '/' });
+      res.cookie(CSRF_COOKIE, token, { httpOnly: false, sameSite: 'strict', secure: req.secure, path: '/' });
       req.cookies[CSRF_COOKIE] = token;
     }
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();

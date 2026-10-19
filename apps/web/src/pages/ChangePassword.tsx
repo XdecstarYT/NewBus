@@ -6,7 +6,7 @@ import { BossByteFace } from '../components/BossByte';
 import { t } from '../i18n';
 import { useStore } from '../lib/store';
 
-export function ChangePasswordForm({ onDone, compact = false }: { onDone?: () => void; compact?: boolean }) {
+export function ChangePasswordForm({ onDone, compact = false, owner = false }: { onDone?: () => void; compact?: boolean; owner?: boolean }) {
   const qc = useQueryClient();
   const [cur, setCur] = useState('');
   const [next, setNext] = useState('');
@@ -36,8 +36,8 @@ export function ChangePasswordForm({ onDone, compact = false }: { onDone?: () =>
         <div className="flex items-center gap-3">
           <BossByteFace mood="think" size={64} />
           <div>
-            <h1 className="h2">{t('pw.title')}</h1>
-            <p className="text-sm muted">{t('pw.subtitle')}</p>
+            <h1 className="h2">{t(owner ? 'pw.ownerTitle' : 'pw.title')}</h1>
+            <p className="text-sm muted">{t(owner ? 'pw.ownerSubtitle' : 'pw.subtitle')}</p>
           </div>
         </div>
       )}
@@ -61,11 +61,11 @@ export function ChangePasswordForm({ onDone, compact = false }: { onDone?: () =>
   );
 }
 
-export function ChangePasswordPage() {
+export function ChangePasswordPage({ owner = false }: { owner?: boolean }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 office-floor">
       <div className="card w-full max-w-md">
-        <ChangePasswordForm />
+        <ChangePasswordForm owner={owner} />
       </div>
     </div>
   );

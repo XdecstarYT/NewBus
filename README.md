@@ -96,6 +96,13 @@ Print from the game's real address (your Wi-Fi address or hosted URL), not `loca
 
 **Owner Control Panel → 🌪️ Chaos & Seasons** has the fun buttons: Credit Rain (Bits for every active company), Double-Bits Hour, summon a Legendary worker, market crash or boom, Boss Byte broadcasts and office events. Start a **season** there to reset the season leaderboard, open a free cosmetic season pass, and pay prizes to the top 10 when it ends. Winners go into the Hall of Fame.
 
+### Can't log in as the owner?
+
+- **Account number:** `01` (typing `1` also works). **Password:** `Diddy`, unless you set `OWNER_PASSWORD`.
+- On a hosted game the first login asks you to choose a new password. After that, use your new one.
+- **Locked out or forgot it?** Set `OWNER_RESET_PASSWORD=true` (in `.env` or your host's dashboard) and restart once. The owner password is reset to `OWNER_PASSWORD` (default `Diddy`) and the badge is unlocked. Then set it back to `false`.
+- Five wrong guesses lock the badge for 15 minutes.
+
 ### Changing the owner password
 
 - In the game: log in as the owner → **🔑 My account** tab → **Change your password**. You can also turn on two-factor login codes there. Players change theirs under **Settings**.

@@ -20,6 +20,8 @@ services:
       - key: OWNER_ACCOUNT_NUMBER
         value: "01"
       - key: OWNER_PASSWORD
-        sync: false # you type your own strong password in the Render dashboard
+        value: Diddy # first login is 01 / Diddy; the game then makes you pick a new password
+      - key: OWNER_RESET_PASSWORD
+        value: "false" # set to "true" for one deploy if you ever get locked out
       - key: SEED_DEMO
         value: "false"

@@ -88,7 +88,7 @@ function Shell() {
   if (me.isLoading) return <LoadingJoke />;
   if (me.error || !me.data) return <Login />;
   const data = me.data;
-  if (data.account.mustChangePassword) return <ChangePasswordPage />;
+  if (data.account.mustChangePassword) return <ChangePasswordPage owner={data.account.role === 'OWNER'} />;
   const role = data.account.role;
   const home = role === 'OWNER' ? '/owner' : role === 'MODERATOR' ? '/mod' : '/office';
   return (

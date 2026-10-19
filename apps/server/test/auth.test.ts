@@ -89,3 +89,20 @@ describe('auth & sessions', () => {
     expect(r.status).toBe(403);
   });
 });
+
+describe('owner can always get in', () => {
+  it('repairs an owner created with a blank password and accepts "1" for "01"', async () => {
+    const { db, schema } = await import('../src/db');
+    const { eq } = await import('drizzle-orm');
+    const { hashPassword, login } = await import('../src/services/auth');
+    const { ensureOwnerAccess } = await import('../src/db/seed');
+    const owner = db.select().from(schema.accounts).where(eq(schema.accounts.role, 'OWNER')).get()!;
+    db.update(schema.accounts).set({ passwordHash: hashPassword('') }).where(eq(schema.accounts.id, owner.id)).run();
+    expect(() => login('01', 'Diddy', undefined, {})).toThrow();
+    ensureOwnerAccess(() => {});
+    expect(login('01', 'Diddy', undefined, {}).account.role).toBe('OWNER');
+    expect(login('01', 'Diddy ', undefined, {}).account.role).toBe('OWNER'); // autofill space
+    const { loginSchema } = await import('@dw/shared');
+    expect(loginSchema.parse({ accountNumber: '1', password: 'x' }).accountNumber).toBe('01');
+  });
+});

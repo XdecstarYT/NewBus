@@ -4,7 +4,11 @@ import { permissionsSchema, permissionsPatchSchema } from './permissions';
 
 // ---------- primitives ----------
 /** Account numbers are zero-padded digit strings, e.g. "01". Never integers. */
-export const accountNumberSchema = z.string().trim().regex(/^\d{2,8}$/, 'Account numbers are 2-8 digits, like "01"');
+export const accountNumberSchema = z
+  .string()
+  .trim()
+  .transform((v) => (/^\d$/.test(v) ? `0${v}` : v)) // "1" means "01"
+  .pipe(z.string().regex(/^\d{2,8}$/, 'Account numbers are 2-8 digits, like "01"'));
 export const passwordSchema = z.string().min(4, 'Password must be at least 4 characters').max(128);
 export const idSchema = z.string().min(1).max(64);
 export const bitsSchema = z.number().int().min(1).max(1_000_000_000_000);
