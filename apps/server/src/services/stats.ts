@@ -38,6 +38,11 @@ export function bump(companyId: string, name: string, by = 1) {
   if (currentSeasonId) s.run(companyId, `s:${currentSeasonId}:${name}`, by);
 }
 
+/** Lifetime-only counter (no daily/season twins), e.g. collection entries. */
+export function bumpLifetime(companyId: string, key: string, by = 1) {
+  S().run(companyId, key, by);
+}
+
 export function getStat(companyId: string, key: string): number {
   const row = db
     .select({ v: schema.stats.value })

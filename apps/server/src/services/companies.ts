@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { CreateCompanyInput, Permissions, Rarity } from '@dw/shared';
 import { db, schema, atomic } from '../db';
+import { bumpLifetime } from './stats';
 import { newId } from '../lib/ids';
 import { clock } from '../lib/time';
 import { badRequest, notFound } from '../lib/errors';
@@ -59,6 +60,8 @@ export function insertWorker(companyId: string, industryId: string, rarity: Rari
     createdAt: rolled.createdAt,
   };
   db.insert(schema.workers).values(row).run();
+  // collection book: every species x rarity a company has ever hired
+  bumpLifetime(companyId, `col:${row.species}:${row.rarity}`);
   return row;
 }
 

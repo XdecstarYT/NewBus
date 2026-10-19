@@ -42,6 +42,9 @@ import { fairTick, autoFair } from './services/fairs';
 import { onMenteeLevelUp } from './services/mentorship';
 import { newsTick } from './services/newsgen';
 import { registerPackageRoutes } from './routes/packages';
+import { registerMegaRoutes } from './routes/mega';
+import { researchTick } from './services/research';
+import { goalsTick, achievementSweep, loadSeason, checkAchievements } from './services/goals';
 
 export function loadFeatures() {
   onLevelUp((companyId, level) => {
@@ -122,5 +125,12 @@ export function loadFeatures() {
   registerJob('auto-fair', Math.max(60_000, cfg().tradeFairs.everyMs || 4 * 3600_000), () => cfg().tradeFairs.everyMs && autoFair());
   registerJob('prune-chat', 6 * 3600_000, () => pruneChat());
   registerPackageRoutes();
+  // The Big Byte Update
+  registerMegaRoutes();
+  registerCompanyHook('research', researchTick);
+  registerGlobalHook('seasons', 60_000, goalsTick);
+  registerGlobalHook('achievements', 60_000, achievementSweep);
+  onLevelUp((companyId) => checkAchievements(companyId));
+  loadSeason();
   void eq;
 }

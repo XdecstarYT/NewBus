@@ -978,6 +978,17 @@ export const seasons = sqliteTable('seasons', {
   winners: json<Array<{ place: number; companyId: string; name: string; score: number }>>('winners'),
 });
 
+export const seasonPass = sqliteTable(
+  'season_pass',
+  {
+    seasonId: text('season_id').notNull(),
+    companyId: text('company_id').notNull(),
+    xp: integer('xp').notNull().default(0),
+    claimed: json<number[]>('claimed').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.seasonId, t.companyId] })],
+);
+
 /** Monotonic counters per company (and per season via key prefix) used by quests, achievements, leaderboards. */
 export const stats = sqliteTable(
   'stats',

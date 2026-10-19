@@ -76,7 +76,7 @@ export function projectCompany(co: Company, now = clock.now()) {
   const out = companyTickOutput(workers as WorkerLike[], workplaces, { now, focusOf: (id) => focus.get(id), campaignActive, relationBonus: relations }, c);
   const mult = companyIncomeMultiplier(co, now);
   const diff = c.difficulty[co.difficulty] ?? c.difficulty.NORMAL;
-  const wages = workers.reduce((s, w) => s + workerWage(w, c, diff.wages), 0);
+  const wages = workers.reduce((s, w) => s + workerWage(w, c, diff.wages), 0) * multiplier('wages', co, now);
   const upkeep = workplaces.reduce((s, w) => s + c.workplaces.upkeepPerTick(w.kind, w.level), 0);
   return {
     incomePerTick: out.income * mult,
@@ -99,7 +99,7 @@ function tickCompany(co: Company, now: number) {
     lastTickAt: co.lastTickAt,
     lastActiveAt: co.lastActiveAt,
     now,
-    offlineCapMs: c.tick.offlineCapHours * 3600_000,
+    offlineCapMs: (c.tick.offlineCapHours + bonus('offline', co, now)) * 3600_000,
     maxCatchupMs: c.tick.maxCatchupMs,
   });
   const ticks = ms / c.tick.intervalMs;

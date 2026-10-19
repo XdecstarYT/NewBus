@@ -12,6 +12,7 @@ import { rollRarity } from '../engine/pods';
 import { liveRng } from '../engine/rng';
 import { badRequest, forbidden } from '../lib/errors';
 import { workerView } from './office';
+import { bonus } from './multipliers';
 import { bump } from './stats';
 import { addNews } from './news';
 import { maybeCreateRelationship } from './relationships';
@@ -40,7 +41,7 @@ export function openPod(companyId: string, podType: string, actorId: string | nu
     if (!opts.free) chargeCompany({ companyId, amount: pod.cost, kind: 'spend.pod', memo: `${pod.name}`, actorId });
     const roll = opts.forceRarity
       ? { rarity: opts.forceRarity, pityHit: false, next: { pityEpic: co.pityEpic, pityLegendary: co.pityLegendary } }
-      : rollRarity(liveRng(), pod.odds, { pityEpic: co.pityEpic, pityLegendary: co.pityLegendary }, { pityEpic: c.pods.pityEpic, pityLegendary: c.pods.pityLegendary });
+      : rollRarity(liveRng(), pod.odds, { pityEpic: co.pityEpic, pityLegendary: co.pityLegendary }, { pityEpic: Math.max(3, c.pods.pityEpic - Math.round(bonus('pity', co))), pityLegendary: Math.max(20, c.pods.pityLegendary - Math.round(bonus('pity', co)) * 5) });
     db.update(schema.companies).set({ pityEpic: roll.next.pityEpic, pityLegendary: roll.next.pityLegendary }).where(eq(schema.companies.id, companyId)).run();
     const w = insertWorker(companyId, co.industryId, roll.rarity);
     maybeCreateRelationship(companyId, w.id);
@@ -50,6 +51,7 @@ export function openPod(companyId: string, podType: string, actorId: string | nu
       addNews('headline', `${co.emoji} ${co.name} hired a LEGENDARY ${getIndustry(co.industryId).workers.find((a) => a.id === w.archetype)?.name ?? 'worker'}!`, `Recruiters everywhere weep with envy.`, companyId);
     }
     if (roll.rarity === 'CURSED') bump(companyId, 'cursed');
+    if (roll.rarity === 'EPIC') bump(companyId, 'epics');
     const full = db.select().from(schema.workers).where(and(eq(schema.workers.id, w.id))).get()!;
     return { worker: workerView(full), rarity: roll.rarity, pityHit: roll.pityHit, pity: roll.next };
   });

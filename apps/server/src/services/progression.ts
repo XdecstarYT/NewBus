@@ -133,7 +133,7 @@ export function shopView(companyId: string) {
     return { id, ...s, have, total: members.length, complete: have === members.length };
   });
   return {
-    items: SHOP_ITEMS.map((i) => ({ ...i, owned: owned.filter((o) => o.itemKey === i.key).length, unlocked: co.level >= i.minLevel })),
+    items: SHOP_ITEMS.filter((i) => !i.exclusive).map((i) => ({ ...i, owned: owned.filter((o) => o.itemKey === i.key).length, unlocked: co.level >= i.minLevel })),
     owned: owned.map((o) => ({ ...o, def: ITEM_MAP.get(o.itemKey) })),
     maxEquipped: c.decor.maxEquipped,
     maxPets: c.decor.maxPets,
@@ -145,7 +145,7 @@ export function shopView(companyId: string) {
 export function buyItem(companyId: string, key: string, actorId: string) {
   return atomic(() => {
     const def = ITEM_MAP.get(key);
-    if (!def) throw notFound('Not in the shop.');
+    if (!def || def.exclusive) throw notFound('Not in the shop.');
     const co = getCompany(companyId);
     if (co.level < def.minLevel) throw badRequest(`Unlocks at company level ${def.minLevel}.`);
     if (def.kind === 'cosmetic' && db.select().from(schema.items).where(and(eq(schema.items.companyId, companyId), eq(schema.items.itemKey, key))).get()) throw badRequest('You already own that cosmetic.');

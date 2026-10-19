@@ -8,10 +8,11 @@ import { db, schema } from '../db';
 import type { Company } from './companies';
 import { clock } from '../lib/time';
 
-export type Kind = 'income' | 'traffic' | 'speed' | 'quality' | 'mood' | 'research';
+export type Kind = 'income' | 'traffic' | 'speed' | 'quality' | 'mood' | 'research' | 'wages' | 'minigame' | 'offline' | 'pity';
+type BonusKind = 'quality' | 'mood' | 'offline' | 'pity';
 type Provider = (co: Company, now: number) => number;
 
-const providers: Record<Kind, Provider[]> = { income: [], traffic: [], speed: [], quality: [], mood: [], research: [] };
+const providers: Record<Kind, Provider[]> = { income: [], traffic: [], speed: [], quality: [], mood: [], research: [], wages: [], minigame: [], offline: [], pity: [] };
 
 export function registerMultiplier(kind: Kind, p: Provider) {
   providers[kind].push(p);
@@ -22,8 +23,8 @@ export function multiplier(kind: Kind, co: Company, now = clock.now()): number {
   return providers[kind].reduce((m, p) => m * p(co, now), 1);
 }
 
-/** Sum of additive providers (quality, mood). */
-export function bonus(kind: 'quality' | 'mood', co: Company, now = clock.now()): number {
+/** Sum of additive providers (quality, mood, offline hours, pity reduction). */
+export function bonus(kind: BonusKind, co: Company, now = clock.now()): number {
   return providers[kind].reduce((s, p) => s + p(co, now), 0);
 }
 

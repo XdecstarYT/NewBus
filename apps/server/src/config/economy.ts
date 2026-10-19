@@ -316,6 +316,33 @@ export const economy = {
 
   research: {
     pointsPerTick: 0.02, // per THINKER worker
+    basePointsPerTick: 0.01, // every company thinks a little
+  },
+
+  achievements: {
+    rewardPerTier: [50, 120, 300, 700, 1500, 3000, 6000, 12000], // Bits from the Treasury per tier
+    passXpPerTier: 20,
+  },
+
+  quests: {
+    dailyCount: 3,
+    weeklyCount: 3,
+    dailyRewardMult: 1, // reward = template base x company level factor x this
+    weeklyRewardMult: 4,
+    passXpDaily: 40,
+    passXpWeekly: 120,
+  },
+
+  seasons: {
+    defaultDays: 14,
+    passTiers: 30,
+    passXpPerTier: 100,
+    prizes: [25000, 15000, 10000, 5000, 5000, 2500, 2500, 2500, 2500, 2500], // top 10 by season earnings
+  },
+
+  chaos: {
+    creditRainMax: 100_000,
+    doubleBitsMaxMinutes: 240,
   },
 
   guilds: {

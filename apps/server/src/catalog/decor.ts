@@ -9,6 +9,8 @@ export interface ShopItem {
   minLevel: number;
   set?: string;
   perk: { mood?: number; income?: number; traffic?: number; research?: number; quality?: number; speed?: number };
+  /** only from the season pass / achievements / packages, never sold */
+  exclusive?: boolean;
 }
 
 export const SHOP_ITEMS: ShopItem[] = [
@@ -45,6 +47,15 @@ export const SHOP_ITEMS: ShopItem[] = [
   { key: 'wallpaper-retro', kind: 'cosmetic', name: 'Retro Arcade', emoji: '👾', description: 'Unlocks the Retro theme.', cost: 1500, minLevel: 4, perk: {} },
   { key: 'wallpaper-forest', kind: 'cosmetic', name: 'Forest Floor', emoji: '🌲', description: 'Unlocks the Forest theme.', cost: 1500, minLevel: 4, perk: {} },
   { key: 'desk-gold', kind: 'cosmetic', name: 'Golden Desk Skin', emoji: '🟨', description: 'Shiny desks. No perks, all swagger.', cost: 5000, minLevel: 6, perk: {} },
+  // season pass exclusives (cosmetic only)
+  { key: 'pass-neon-crown', kind: 'cosmetic', name: 'Neon Crown', emoji: '👑', description: 'Season pass exclusive. Glows a little.', cost: 0, minLevel: 1, perk: {}, exclusive: true },
+  { key: 'pass-rainbow-carpet', kind: 'cosmetic', name: 'Rainbow Carpet', emoji: '🌈', description: 'Season pass exclusive. Very loud carpet.', cost: 0, minLevel: 1, perk: {}, exclusive: true },
+  { key: 'pass-confetti-cannon', kind: 'cosmetic', name: 'Confetti Cannon', emoji: '🎊', description: 'Season pass exclusive. Fires on payday.', cost: 0, minLevel: 1, perk: {}, exclusive: true },
+  { key: 'pass-byte-plush', kind: 'cosmetic', name: 'Boss Byte Plushie', emoji: '🧸', description: 'Season pass exclusive. Squeaks "synergy!"', cost: 0, minLevel: 1, perk: {}, exclusive: true },
+  { key: 'pass-disco-floor', kind: 'cosmetic', name: 'Light-Up Disco Floor', emoji: '🟪', description: 'Season pass exclusive.', cost: 0, minLevel: 1, perk: {}, exclusive: true },
+  { key: 'pass-rocket-desk', kind: 'cosmetic', name: 'Rocket Desk', emoji: '🚀', description: 'Season pass exclusive. Does not actually fly.', cost: 0, minLevel: 1, perk: {}, exclusive: true },
+  { key: 'pass-gold-statue', kind: 'cosmetic', name: 'Golden CEO Statue', emoji: '🗿', description: 'Season pass grand prize. Looks just like you.', cost: 0, minLevel: 1, perk: {}, exclusive: true },
+  { key: 'pass-season-banner', kind: 'cosmetic', name: 'Season Banner', emoji: '🎏', description: 'Season pass exclusive. Proof you were there.', cost: 0, minLevel: 1, perk: {}, exclusive: true },
 ];
 
 export const SETS: Record<string, { name: string; emoji: string; bonus: { income?: number; mood?: number; traffic?: number } }> = {
