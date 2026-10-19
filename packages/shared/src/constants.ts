@@ -37,6 +37,9 @@ export const MODULES = [
   'wars',
   'news',
   'staff',
+  'strategy',
+  'unions',
+  'court',
 ] as const;
 export type Module = (typeof MODULES)[number];
 
@@ -67,6 +70,9 @@ export const MODULE_INFO: Record<Module, { label: string; emoji: string; path: s
   wars: { label: 'Business Wars', emoji: '⚔️', path: '/wars' },
   news: { label: 'Daily Byte', emoji: '📰', path: '/news' },
   staff: { label: 'Staff', emoji: '🪪', path: '/company' },
+  strategy: { label: 'Strategy Room', emoji: '♟️', path: '/strategy' },
+  unions: { label: 'Unions', emoji: '✊', path: '/unions' },
+  court: { label: 'Courthouse', emoji: '⚖️', path: '/court' },
 };
 
 export const RARITIES = ['COMMON', 'RARE', 'EPIC', 'LEGENDARY', 'CURSED'] as const;

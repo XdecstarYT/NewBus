@@ -16,7 +16,7 @@ import { newId } from '../lib/ids';
 import { clock } from '../lib/time';
 import { GameError, insufficientFunds } from '../lib/errors';
 
-export type OwnerType = 'system' | 'company' | 'account' | 'guild';
+export type OwnerType = 'system' | 'company' | 'account' | 'guild' | 'union';
 
 export const SYS = {
   MINT: 'w:system:mint:main',

@@ -73,6 +73,16 @@ export interface AccessContext {
   moderatorTools: string[];
 }
 
+/** Filters that can switch modules off for a company (e.g. a licence suspension). */
+const accessFilters: Array<(companyId: string, modules: Record<Module, boolean>) => void> = [];
+export function registerAccessFilter(fn: (companyId: string, modules: Record<Module, boolean>) => void) {
+  accessFilters.push(fn);
+}
+function filtered(companyId: string, modules: Record<Module, boolean>) {
+  for (const f of accessFilters) f(companyId, modules);
+  return modules;
+}
+
 const none = () => Object.fromEntries(MODULES.map((m) => [m, false])) as Record<Module, boolean>;
 
 /** Compute what an account may do right now. */
@@ -98,7 +108,7 @@ export function resolveAccess(
     const perms = getCompanyPermissions(viewAsCompanyId);
     const modules = none();
     for (const m of MODULES) modules[m] = !!perms.modules[m] && !!flags[m];
-    return { ...base, companyId: viewAsCompanyId, modules, limits: perms.limits, readOnly: true, viewAs: true };
+    return { ...base, companyId: viewAsCompanyId, modules: filtered(viewAsCompanyId, modules), limits: perms.limits, readOnly: true, viewAs: true };
   }
 
   if (role === 'OWNER') {
@@ -131,5 +141,5 @@ export function resolveAccess(
     const eff = effectiveStaffModules(perms, getStaffPermissions(account.id));
     for (const m of MODULES) modules[m] = eff[m] && !!flags[m];
   }
-  return { ...base, modules, limits: perms.limits, readOnly: maintenance };
+  return { ...base, modules: filtered(account.companyId, modules), limits: perms.limits, readOnly: maintenance };
 }

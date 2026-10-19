@@ -48,10 +48,12 @@ export function activeModifiers(companyId: string | null, now = clock.now()) {
 }
 
 // Temporary modifiers feed every kind.
-for (const kind of ['income', 'traffic', 'speed', 'research'] as const) {
+for (const kind of ['income', 'traffic', 'speed', 'research', 'wages'] as const) {
   registerMultiplier(kind, (co, now) => activeModifiers(co.id, now).filter((m) => m.kind === kind).reduce((p, m) => p * m.value, 1));
 }
-registerMultiplier('mood', (co, now) => activeModifiers(co.id, now).filter((m) => m.kind === 'mood').reduce((s, m) => s + m.value, 0));
+for (const kind of ['mood', 'quality'] as const) {
+  registerMultiplier(kind, (co, now) => activeModifiers(co.id, now).filter((m) => m.kind === kind).reduce((s, m) => s + m.value, 0));
+}
 
 import { newId } from '../lib/ids';
 /** Add a temporary modifier (companyId null = global). */

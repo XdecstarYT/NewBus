@@ -115,10 +115,17 @@ export interface ChargeOpts {
 }
 
 /** Charge a company. Throws if it can't afford it or it exceeds the daily spend cap. */
+/** Checks that can veto a company spending (e.g. a court-ordered asset freeze). */
+const spendGuards: Array<(companyId: string, kind: string) => void> = [];
+export function registerSpendGuard(fn: (companyId: string, kind: string) => void) {
+  spendGuards.push(fn);
+}
+
 export function chargeCompany(o: ChargeOpts): string {
   return atomic(() => {
     const amount = Math.floor(o.amount);
     if (amount <= 0) return '';
+    for (const g of spendGuards) g(o.companyId, o.kind);
     const from = companyWallet(o.companyId, o.pot ?? 'main');
     const have = balanceOf(from);
     if (have < amount) throw insufficientFunds(amount, have);

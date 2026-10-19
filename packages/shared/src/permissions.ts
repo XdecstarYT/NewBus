@@ -125,6 +125,9 @@ const STANDARD_MODULES: Module[] = [
   'guilds',
   'wars',
   'staff',
+  'strategy',
+  'unions',
+  'court',
 ];
 
 export const PERMISSION_PRESETS: Record<'starter' | 'standard' | 'full' | 'readonly', { label: string; emoji: string; blurb: string; perms: Permissions }> = {
@@ -173,11 +176,18 @@ export function applyPermissionsPatch(base: Permissions, patch: PermissionsPatch
   return out;
 }
 
+/** Strategy-layer modules arrived later: companies saved before then get them if they can already trade. */
+const LATE_MODULES: Module[] = ['strategy', 'unions', 'court'];
+function newModuleDefaults(saved: Partial<Record<Module, boolean>> | undefined) {
+  if (!saved) return {};
+  return Object.fromEntries(LATE_MODULES.filter((m) => !(m in saved)).map((m) => [m, !!saved.marketplace]));
+}
+
 /** Fill any missing fields (old rows / new modules) with defaults. */
 export function normalizePermissions(p: Partial<Permissions> | null | undefined): Permissions {
   const base = PERMISSION_PRESETS.standard.perms;
   return {
-    modules: { ...allModules(false), ...(p?.modules ?? base.modules) },
+    modules: { ...allModules(false), ...newModuleDefaults(p?.modules), ...(p?.modules ?? base.modules) },
     limits: { ...DEFAULT_LIMITS, ...(p?.limits ?? {}) },
   };
 }

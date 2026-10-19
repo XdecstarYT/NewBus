@@ -45,6 +45,10 @@ import { registerPackageRoutes } from './routes/packages';
 import { registerMegaRoutes } from './routes/mega';
 import { registerOpsRoutes } from './routes/ops';
 import { registerPosRoutes } from './routes/pos';
+import { registerStrategyRoutes } from './routes/strategy';
+import { lawsTick, decayPresence, coolAuditRisk } from './services/strategy';
+import { unionsTick } from './services/unions';
+import { courtTick } from './services/justice';
 import { createBackup } from './services/ops';
 import { env } from './env';
 import { log } from './lib/log';
@@ -145,6 +149,18 @@ export function loadFeatures() {
   loadSeason();
   registerOpsRoutes();
   registerPosRoutes();
+  registerStrategyRoutes();
+
+  // strategy layer: union elections and dues, court hearings and verdicts, bills, district territory
+  registerGlobalHook('unions', 30_000, (now) => unionsTick(now));
+  registerGlobalHook('court', 30_000, (now) => courtTick(now));
+  registerGlobalHook('laws', 30_000, (now) => lawsTick(now));
+  let lastDecay = 0;
+  registerGlobalHook('districts', 60_000, (now) => {
+    if (lastDecay) decayPresence((now - lastDecay) / 60_000);
+    lastDecay = now;
+  });
+  registerGlobalHook('audit-cooloff', 3600_000, () => coolAuditRisk());
   if (env.databasePath !== ':memory:' && env.backupEveryHours > 0) {
     registerJob('scheduled-backup', env.backupEveryHours * 3600_000, () => {
       createBackup('auto').catch((e) => log.error('scheduled backup failed', { err: String(e) }));

@@ -43,6 +43,13 @@
       "when": 1792447936271,
       "tag": "0005_pos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792448865025,
+      "tag": "0006_strategy",
+      "breakpoints": true
     }
   ]
 }

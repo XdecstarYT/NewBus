@@ -1102,3 +1102,246 @@ export const flags = sqliteTable(
   },
   (t) => [index('flags_created_idx').on(t.createdAt)],
 );
+
+// ---------------------------------------------------------------- strategy layer
+/** Per-company strategy state: influence, legal strength, audit risk, policies and focus district. */
+export const companyStrategy = sqliteTable('company_strategy', {
+  companyId: text('company_id').primaryKey(),
+  influence: integer('influence').notNull().default(0),
+  legal: integer('legal').notNull().default(0),
+  auditRisk: integer('audit_risk').notNull().default(0),
+  /** Bits of income hidden from tax by shady actions (what an audit can find). */
+  undeclared: integer('undeclared').notNull().default(0),
+  focusDistrict: text('focus_district').notNull().default('downtown'),
+  policies: json<Record<string, string>>('policies').notNull(),
+  policyChangedAt: ts('policy_changed_at'),
+  actionsRun: integer('actions_run').notNull().default(0),
+  updatedAt: ts('updated_at').notNull(),
+});
+
+/** Each strategic action a company has started. */
+export const strategyRuns = sqliteTable(
+  'strategy_runs',
+  {
+    id: text('id').primaryKey(),
+    companyId: text('company_id').notNull(),
+    actionId: text('action_id').notNull(),
+    cost: integer('cost').notNull(),
+    startedAt: ts('started_at').notNull(),
+    endsAt: ts('ends_at').notNull(),
+    readyAt: ts('ready_at').notNull(),
+    backfired: bool('backfired').notNull().default(false),
+    note: text('note'),
+  },
+  (t) => [index('strategy_runs_company_idx').on(t.companyId, t.startedAt)],
+);
+
+/** Market presence per district; the biggest share controls it. */
+export const districtPresence = sqliteTable(
+  'district_presence',
+  {
+    districtId: text('district_id').notNull(),
+    companyId: text('company_id').notNull(),
+    points: real('points').notNull().default(0),
+    updatedAt: ts('updated_at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.districtId, t.companyId] })],
+);
+
+/** Laws the Owner puts to a lobbying vote. */
+export const laws = sqliteTable('laws', {
+  id: text('id').primaryKey(),
+  templateKey: text('template_key').notNull(),
+  title: text('title').notNull(),
+  emoji: text('emoji').notNull(),
+  blurb: text('blurb').notNull(),
+  kind: text('kind').notNull(),
+  value: real('value').notNull(),
+  hours: integer('hours').notNull(),
+  status: text('status').notNull(), // lobbying | passed | failed | vetoed
+  support: integer('support').notNull().default(0),
+  oppose: integer('oppose').notNull().default(0),
+  proposedBy: text('proposed_by'),
+  createdAt: ts('created_at').notNull(),
+  closesAt: ts('closes_at').notNull(),
+  decidedAt: ts('decided_at'),
+});
+
+export const lawLobby = sqliteTable(
+  'law_lobby',
+  {
+    lawId: text('law_id').notNull(),
+    companyId: text('company_id').notNull(),
+    side: text('side').notNull(), // for | against
+    influence: integer('influence').notNull(),
+    at: ts('at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.lawId, t.companyId] })],
+);
+
+// ---------------------------------------------------------------- unions
+export const unions = sqliteTable('unions', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  emoji: text('emoji').notNull(),
+  motto: text('motto').notNull().default(''),
+  presidentId: text('president_id'),
+  vpId: text('vp_id'),
+  treasurerId: text('treasurer_id'),
+  /** Daily dues each member pays into the union treasury. */
+  dues: integer('dues').notNull().default(100),
+  influence: integer('influence').notNull().default(0),
+  open: bool('open').notNull().default(true),
+  termEndsAt: ts('term_ends_at').notNull(),
+  duesDay: text('dues_day'),
+  foundedBy: text('founded_by').notNull(),
+  createdAt: ts('created_at').notNull(),
+});
+
+/** A member business and the account that represents it (votes and runs for office). */
+export const unionMembers = sqliteTable(
+  'union_members',
+  {
+    companyId: text('company_id').primaryKey(),
+    unionId: text('union_id').notNull(),
+    repAccountId: text('rep_account_id').notNull(),
+    joinedAt: ts('joined_at').notNull(),
+    duesOwed: integer('dues_owed').notNull().default(0),
+  },
+  (t) => [index('union_members_union_idx').on(t.unionId)],
+);
+
+export const unionElections = sqliteTable(
+  'union_elections',
+  {
+    id: text('id').primaryKey(),
+    unionId: text('union_id').notNull(),
+    office: text('office').notNull(), // president | vp | treasurer | recall
+    /** for a recall (vote of no confidence): the office holder being challenged */
+    targetId: text('target_id'),
+    targetOffice: text('target_office'),
+    status: text('status').notNull(), // nominating | voting | closed
+    votingAt: ts('voting_at').notNull(),
+    closesAt: ts('closes_at').notNull(),
+    winnerId: text('winner_id'),
+    result: json<Record<string, number>>('result'),
+    calledBy: text('called_by'),
+    createdAt: ts('created_at').notNull(),
+  },
+  (t) => [index('union_elections_union_idx').on(t.unionId, t.status)],
+);
+
+export const unionCandidates = sqliteTable(
+  'union_candidates',
+  {
+    electionId: text('election_id').notNull(),
+    companyId: text('company_id').notNull(),
+    pitch: text('pitch').notNull().default(''),
+    at: ts('at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.electionId, t.companyId] })],
+);
+
+export const unionVotes = sqliteTable(
+  'union_votes',
+  {
+    electionId: text('election_id').notNull(),
+    voterId: text('voter_id').notNull(), // company id (one vote per member business)
+    choice: text('choice').notNull(), // candidate company id, or yes/no for a recall
+    accountId: text('account_id').notNull(),
+    at: ts('at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.electionId, t.voterId] })],
+);
+
+// ---------------------------------------------------------------- justice
+/** Owner-run tax audits. */
+export const taxAudits = sqliteTable(
+  'tax_audits',
+  {
+    id: text('id').primaryKey(),
+    companyId: text('company_id').notNull(),
+    depth: text('depth').notNull(), // desk | field | forensic
+    status: text('status').notNull(), // open | closed
+    findings: json<Record<string, unknown>>('findings').notNull(),
+    suggestedFine: integer('suggested_fine').notNull().default(0),
+    fine: integer('fine').notNull().default(0),
+    outcome: text('outcome'), // clean | warning | fined | referred
+    note: text('note'),
+    openedBy: text('opened_by'),
+    createdAt: ts('created_at').notNull(),
+    closedAt: ts('closed_at'),
+  },
+  (t) => [index('tax_audits_company_idx').on(t.companyId, t.createdAt)],
+);
+
+export interface CaseRemedy {
+  damages?: number;
+  fine?: number;
+  freezeHours?: number;
+  suspendModule?: string | null;
+  suspendHours?: number;
+}
+
+export const courtCases = sqliteTable(
+  'court_cases',
+  {
+    id: text('id').primaryKey(),
+    number: integer('number').notNull(),
+    kind: text('kind').notNull(),
+    title: text('title').notNull(),
+    /** null = the State (the Owner) */
+    plaintiffId: text('plaintiff_id'),
+    defendantId: text('defendant_id').notNull(),
+    claim: integer('claim').notNull().default(0),
+    filingFee: integer('filing_fee').notNull().default(0),
+    status: text('status').notNull(), // filed | hearing | decided | appealed | closed | settled | dismissed
+    hearingAt: ts('hearing_at').notNull(),
+    verdict: text('verdict'), // plaintiff | defendant
+    remedy: json<CaseRemedy>('remedy'),
+    reasoning: text('reasoning'),
+    appealed: bool('appealed').notNull().default(false),
+    appealDeadline: ts('appeal_deadline'),
+    settleOffer: integer('settle_offer'),
+    settleFrom: text('settle_from'),
+    auditId: text('audit_id'),
+    createdBy: text('created_by'),
+    createdAt: ts('created_at').notNull(),
+    decidedAt: ts('decided_at'),
+    closedAt: ts('closed_at'),
+  },
+  (t) => [index('court_cases_def_idx').on(t.defendantId), index('court_cases_pl_idx').on(t.plaintiffId), index('court_cases_status_idx').on(t.status)],
+);
+
+export const courtEvidence = sqliteTable(
+  'court_evidence',
+  {
+    id: text('id').primaryKey(),
+    caseId: text('case_id').notNull(),
+    side: text('side').notNull(), // plaintiff | defendant
+    kind: text('kind').notNull(),
+    text: text('text').notNull(),
+    weight: integer('weight').notNull(),
+    byAccountId: text('by_account_id'),
+    createdAt: ts('created_at').notNull(),
+  },
+  (t) => [index('court_evidence_case_idx').on(t.caseId)],
+);
+
+/** Asset freezes and licence suspensions from courts, audits or the Owner. */
+export const sanctions = sqliteTable(
+  'sanctions',
+  {
+    id: text('id').primaryKey(),
+    companyId: text('company_id').notNull(),
+    kind: text('kind').notNull(), // freeze | suspend
+    module: text('module'),
+    reason: text('reason').notNull(),
+    source: text('source').notNull(), // court | audit | owner
+    sourceId: text('source_id'),
+    until: ts('until').notNull(),
+    createdAt: ts('created_at').notNull(),
+    liftedAt: ts('lifted_at'),
+  },
+  (t) => [index('sanctions_company_idx').on(t.companyId, t.until)],
+);

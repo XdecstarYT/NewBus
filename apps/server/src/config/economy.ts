@@ -420,6 +420,29 @@ export const economy = {
     historySize: 100,
   },
 
+  unions: {
+    createCost: 3000,
+    maxMembers: 30,
+    nominateMinutes: 30,
+    voteMinutes: 60,
+    termDays: 3,
+    recallCost: 500,
+    moveCooldownHours: 6,
+    /** +1% income for every N members (up to +5%) */
+    cloutEvery: 3,
+  },
+
+  justice: {
+    filingFeePct: 5, // % of the claim, min 100
+    minFilingFee: 100,
+    hearingMinutes: 60,
+    appealHours: 24,
+    appealFeeMult: 2,
+    /** audit cost to the State by depth; detection chance of hidden income */
+    auditDetect: { desk: 0.35, field: 0.65, forensic: 0.9 },
+    auditPenaltyPct: 50,
+  },
+
   global: {
     creditRainPerCompany: 500,
     doubleBitsMinutes: 60,
