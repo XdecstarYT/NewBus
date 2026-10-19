@@ -176,7 +176,7 @@ export function Flags() {
   return (
     <div className="grid lg:grid-cols-2 gap-4">
       <div className="card">
-        <h2 className="h2 mb-2">🎚️ Feature flags (global, live)</h2>
+        <h1 className="h2 mb-2">🎚️ Feature flags (global, live)</h1>
         {flags.data && ALL_FLAGS.map((f) => (
           <Toggle key={f} checked={!!flags.data![f]} onChange={(v) => set.mutate({ flag: f, enabled: v })} label={(MODULE_INFO as any)[f] ? `${(MODULE_INFO as any)[f].emoji} ${(MODULE_INFO as any)[f].label}` : FLAG_INFO[f] ?? f} />
         ))}

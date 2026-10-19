@@ -25,11 +25,26 @@
   - **Collection book:** species x rarity, backfilled for older companies.
   - **Owner Chaos Controls:** Credit Rain, Double-Bits (x1.5/x2/x3), spawn a Legendary, market crash/boom, Boss Byte broadcast (optionally into the Daily Byte), trigger office events for one company or everyone.
 
-## In progress
-- Phase 10 - juice polish, accessibility pass, localization.
+- **Phases 10-12 - ops, QA and polish:**
+  - **Backups:** one-click and scheduled (`BACKUP_EVERY_HOURS`), with download, restore (safety backup first, live caches reloaded) and a settings export/import file.
+  - **Owner dashboards:** Anti-cheat (flags, shared IPs, linked groups, big gifts, arcade outliers) and Analytics (active players, 10-day activity, industries, feature usage).
+  - **Simulation:** `npm run simulate` runs 500+ bots in 5 play styles and reports supply, Gini, faucets and sinks.
+  - **Load test:** `npm run loadtest` drives a real server with live WebSockets.
+  - **Browser tests:** a Playwright suite covering owner and player flows, desktop and phone, with axe accessibility scans.
+  - **CI:** GitHub Actions runs checks, browser tests, a simulation/load-test smoke run and a Docker build.
+  - **Docs:** `docs/ECONOMY.md`, `docs/OWNER_GUIDE.md`, `docs/SIMULATION.md`.
+- **Economy fixes found by the simulation:**
+  - **Treasury burn:** surplus above `treasuryReserve` is destroyed, so sinks are real.
+  - **Progressive production tax:** `incomeTaxFreePerTick` and `incomeTaxRate`.
+  - **Auto-balancer reworked and on by default:** it now tunes the tax instead of flat wages, because raising wages bankrupted half the companies.
+  - **Faster achievement checks:** one stats query per company instead of ~250.
+- **Accessibility fixes from the axe scans:** darker green, pink and muted colours for contrast, rarity chips with readable text, a heading on every page, proper roles on progress pips.
 
-## Next
-- Phases 11-12 per `docs/SPEC.md` section 24: backups (one-click + scheduled), anti-cheat dashboard, analytics, economy simulation (500+ bots), load test, Playwright e2e suite, GitHub Actions CI.
+## Still open / ideas
+- Options and margin trading are only partly built (short selling is behind the `shorting` flag; there is no options chain).
+- Localization: only English strings exist (the i18n scaffold is in `apps/web/src/i18n`).
+- Browser notifications work while the game is open (even in a background tab); there is no Web Push server yet for when the app is fully closed.
+- The economy still runs hot in the first day of a brand-new game while every company starts at once; the auto-balancer settles it over the following days (see `docs/SIMULATION.md`).
 
 ## Decisions / defaults
 - **SQLite via better-sqlite3 (synchronous).** Every service call runs to completion; `atomic()` wraps multi-step writes in a real transaction. Schema stays Postgres-ready (text ids, integer money, JSON as text).

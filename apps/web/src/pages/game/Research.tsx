@@ -64,7 +64,7 @@ export function Research() {
           <div key={b.id} className="card !p-3 flex flex-col gap-2" style={{ borderColor: b.color }}>
             <div className="text-center">
               <div className="text-3xl">{b.emoji}</div>
-              <div className="font-extrabold" style={{ color: b.color }}>{b.name}</div>
+              <div className="font-extrabold">{b.name}</div>
               <div className="text-xs muted">{b.blurb}</div>
             </div>
             {b.nodes.map((n: any, i: number) => {
@@ -78,7 +78,7 @@ export function Research() {
                   </div>
                   <div className="text-[11px] muted">{n.description}</div>
                   <div className="text-[11px] font-bold">{EFFECT_TEXT[n.effect]?.(n.perLevel) ?? n.effect} per level</div>
-                  <div className="flex gap-0.5" aria-label={`Level ${n.level} of ${n.maxLevel}`}>
+                  <div className="flex gap-0.5" role="img" aria-label={`Level ${n.level} of ${n.maxLevel}`}>
                     {Array.from({ length: n.maxLevel }, (_, k) => <span key={k} className="h-2 flex-1 rounded-full" style={{ background: k < n.level ? b.color : 'rgb(0 0 0 / 0.1)' }} />)}
                   </div>
                   {!n.unlocked ? (

@@ -79,18 +79,23 @@ export function economyTip(): string {
   }
 }
 
-/** Auto-balancer: nudges the NPC refill (faucet) and wages ratio (sink) toward the target band. */
+/**
+ * Auto-balancer: nudges the progressive production tax (hits big earners, not
+ * small companies) and the NPC demand refill toward the target band. Simulation
+ * showed that raising flat wages instead bankrupts small companies first.
+ */
 export function autoBalance() {
   if (!flag('autoBalancer')) return null;
   const h = economyHealth();
   const c = cfg();
   const refill = c.economy.npcPoolRefillPerCompanyPerTick;
-  const wage = c.workers.wageRatio;
+  const rate = c.economy.incomeTaxRate;
   let changed: Record<string, number> | null = null;
+  const round = (n: number) => Math.round(n * 1000) / 1000;
   if (h.inflation > h.target.high) {
-    changed = { 'economy.npcPoolRefillPerCompanyPerTick': Math.max(5, Math.round(refill * 0.95)), 'workers.wageRatio': Math.min(0.6, Math.round(wage * 1.05 * 1000) / 1000) };
+    changed = { 'economy.incomeTaxRate': round(Math.min(0.85, rate + 0.05)), 'economy.npcPoolRefillPerCompanyPerTick': Math.max(5, Math.round(refill * 0.95)) };
   } else if (h.inflation < h.target.low) {
-    changed = { 'economy.npcPoolRefillPerCompanyPerTick': Math.min(200, Math.round(refill * 1.05)), 'workers.wageRatio': Math.max(0.1, Math.round(wage * 0.95 * 1000) / 1000) };
+    changed = { 'economy.incomeTaxRate': round(Math.max(0, rate - 0.05)), 'economy.npcPoolRefillPerCompanyPerTick': Math.min(200, Math.round(refill * 1.05)) };
   }
   if (changed) {
     for (const [k, v] of Object.entries(changed)) setSetting(k, v);

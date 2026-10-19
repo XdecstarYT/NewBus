@@ -62,18 +62,36 @@ export function collectionView(companyId: string) {
 }
 
 // ------------------------------------------------------------ achievements
-function progressOf(companyId: string, a: AchievementDef, co = getCompany(companyId), unlockedCount?: number) {
+interface ProgressCtx {
+  stats: Map<string, number>;
+  level: number;
+  prestige: number;
+  collection: number;
+  unlocked: number;
+}
+
+function progressCtx(companyId: string, co = getCompany(companyId)): ProgressCtx {
+  backfillCollection(companyId);
+  const rows = sqlite.prepare(`SELECT key, value FROM stats WHERE company_id = ? AND key NOT LIKE 'd:%' AND key NOT LIKE 's:%'`).all(companyId) as Array<{ key: string; value: number }>;
+  const stats = new Map(rows.map((r) => [r.key, r.value]));
+  let collection = 0;
+  for (const [k, v] of stats) if (k.startsWith('col:') && v > 0) collection++;
+  const unlocked = (sqlite.prepare(`SELECT COUNT(*) n FROM achievements WHERE company_id = ?`).get(companyId) as { n: number }).n;
+  return { stats, level: co.level, prestige: co.prestigeCount, collection, unlocked };
+}
+
+function progressOf(a: AchievementDef, p: ProgressCtx) {
   switch (a.kind) {
     case 'stat':
-      return getStat(companyId, a.stat!);
+      return p.stats.get(a.stat!) ?? 0;
     case 'level':
-      return co.level;
+      return p.level;
     case 'prestige':
-      return co.prestigeCount;
+      return p.prestige;
     case 'collection':
-      return collectionCount(companyId);
+      return p.collection;
     case 'meta':
-      return unlockedCount ?? (sqlite.prepare(`SELECT COUNT(*) n FROM achievements WHERE company_id = ?`).get(companyId) as { n: number }).n;
+      return p.unlocked;
     default:
       return 0;
   }
@@ -84,13 +102,15 @@ export function checkAchievements(companyId: string) {
   const co = findCompany(companyId);
   if (!co) return [];
   const have = new Set(db.select({ k: schema.achievements.key }).from(schema.achievements).where(eq(schema.achievements.companyId, companyId)).all().map((r) => r.k));
+  const ctx = progressCtx(companyId, co);
   const fresh: AchievementDef[] = [];
   const c = cfg().achievements;
   // two passes so "meta" achievements see the ones unlocked in the first pass
   for (let pass = 0; pass < 2; pass++) {
+    ctx.unlocked = have.size;
     for (const a of ACHIEVEMENTS) {
       if (have.has(a.key) || (pass === 0 && a.kind === 'meta')) continue;
-      if (progressOf(companyId, a, co, have.size) < a.target) continue;
+      if (progressOf(a, ctx) < a.target) continue;
       db.insert(schema.achievements).values({ companyId, key: a.key, unlockedAt: clock.now() }).onConflictDoNothing().run();
       have.add(a.key);
       fresh.push(a);
@@ -110,6 +130,7 @@ export function achievementsView(companyId: string) {
   const co = getCompany(companyId);
   checkAchievements(companyId);
   const unlocked = new Map(db.select().from(schema.achievements).where(eq(schema.achievements.companyId, companyId)).all().map((r) => [r.key, r.unlockedAt]));
+  const ctx = progressCtx(companyId, co);
   const list = ACHIEVEMENTS.map((a) => {
     const at = unlocked.get(a.key) ?? null;
     const hidden = a.secret && !at;
@@ -121,7 +142,7 @@ export function achievementsView(companyId: string) {
       title: hidden ? '???' : a.title,
       tier: a.tier,
       target: a.target,
-      progress: at ? a.target : hidden ? 0 : Math.min(a.target, progressOf(companyId, a, co, unlocked.size)),
+      progress: at ? a.target : hidden ? 0 : Math.min(a.target, progressOf(a, ctx)),
       unlockedAt: at,
       group: a.secret ? 'secret' : a.kind === 'stat' ? a.stat : a.kind,
     };

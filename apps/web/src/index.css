@@ -8,11 +8,11 @@
   --paper: 254 249 239;
   --card: 255 255 255;
   --accent: 124 58 237;
-  --accent2: 236 72 153;
-  --good: 22 163 74;
+  --accent2: 190 24 93;
+  --good: 21 128 61;
   --bad: 220 38 38;
   --warn: 217 119 6;
-  --muted: 100 116 139;
+  --muted: 71 85 105;
   --font-scale: 1;
   color-scheme: light;
 }

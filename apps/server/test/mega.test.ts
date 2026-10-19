@@ -129,13 +129,20 @@ describe('The Big Byte Update', () => {
     const r = chaos.creditRain(100, 'owner');
     expect(balanceOf(companyWallet(company.id))).toBe(bal + 100);
     expect(balanceOf(SYS.TREASURY)).toBe(treasury - r.total);
-    const before = projectCompany(getCompany(company.id)).incomePerTick;
+    const before = projectCompany(getCompany(company.id)).grossIncomePerTick;
     chaos.doubleBits(30, 2, 'owner');
     clock.set(clock.now() + 1);
-    expect(projectCompany(getCompany(company.id)).incomePerTick).toBeCloseTo(before * 2, 1);
+    expect(projectCompany(getCompany(company.id)).grossIncomePerTick).toBeCloseTo(before * 2, 1);
     clock.set(null);
     expect(() => chaos.creditRain(10_000_000, 'owner')).toThrow();
     expect(verifyLedger().sum).toBe(0);
+  });
+
+  it('progressive production tax leaves small companies alone and trims big earners', async () => {
+    const { afterProductionTax } = await import('../src/services/tick');
+    const c = cfg().economy;
+    expect(afterProductionTax(c.incomeTaxFreePerTick - 1)).toBe(c.incomeTaxFreePerTick - 1);
+    expect(afterProductionTax(c.incomeTaxFreePerTick + 100)).toBeCloseTo(c.incomeTaxFreePerTick + 100 * (1 - c.incomeTaxRate), 5);
   });
 
   it('API: the new pages answer and owner tools stay owner-only', async () => {

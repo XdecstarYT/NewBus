@@ -136,7 +136,7 @@ export function Analytics() {
   const vals = d.daily.map((x: any) => x[metric]);
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="h1">📊 Analytics</h1>
+      <h1 className="h1">🧮 Analytics</h1>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Stat emoji="🏢" label="Companies" value={t.companies} sub={`${t.active1d} active today`} />
         <Stat emoji="📅" label="Active 7 / 30 days" value={`${t.active7d} / ${t.active30d}`} />

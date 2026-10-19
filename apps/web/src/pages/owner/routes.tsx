@@ -22,7 +22,7 @@ export const ownerRoutes: Array<{ path: string; label?: string; element: ReactNo
   { path: 'market', label: '📈 Market', element: <MarketAdmin /> },
   { path: 'social', label: '🤝 Social', element: <SocialAdmin /> },
   { path: 'chaos', label: '🌪️ Chaos & Seasons', element: <ChaosControls /> },
-  { path: 'analytics', label: '📊 Analytics', element: <Analytics /> },
+  { path: 'analytics', label: '🧮 Analytics', element: <Analytics /> },
   { path: 'anticheat', label: '🕵️ Anti-cheat', element: <AntiCheat /> },
   { path: 'backups', label: '💾 Backups', element: <Backups /> },
   { path: 'packages', label: '📦 Packages', element: <PackagesAdmin /> },

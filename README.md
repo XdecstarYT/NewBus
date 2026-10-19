@@ -115,9 +115,14 @@ All game data is one SQLite file: `data/digital-workforce.db` locally, or `/data
 | `npm run play` | Build the web app and serve everything from :3000 |
 | `npm run seed` | Create the owner, templates and demo data (safe to re-run) |
 | `npm test` | Server test suite (in-memory database) |
+| `npm run test:e2e` | Browser tests (desktop + phone + accessibility scans) with Playwright |
+| `npm run simulate` | 500-bot economy simulation report (see [docs/ECONOMY.md](docs/ECONOMY.md)) |
+| `npm run loadtest` | Load test: hundreds of players over HTTP + live WebSockets |
 | `npm run typecheck` / `npm run lint` | Type and lint checks |
 
 - Stack: Node + Express + `ws`, SQLite (better-sqlite3 + Drizzle), React + Vite + Tailwind + Framer Motion.
 - Every balance number lives in [`apps/server/src/config/economy.ts`](apps/server/src/config/economy.ts).
+- Owner manual: [`docs/OWNER_GUIDE.md`](docs/OWNER_GUIDE.md). Economy design and simulation results: [`docs/ECONOMY.md`](docs/ECONOMY.md).
+- GitHub Actions runs typecheck, lint, unit tests, browser tests, a simulation + load test smoke run and a Docker build on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 - Full design spec: [`docs/SPEC.md`](docs/SPEC.md). What is done and what is next: [`docs/PROGRESS.md`](docs/PROGRESS.md).
 - Configuration: copy [`.env.example`](.env.example) to `.env`. Never commit `.env`.

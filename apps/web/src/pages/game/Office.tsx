@@ -112,6 +112,8 @@ export function Office() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* page heading for screen readers; the top bar already shows the company name */}
+      <h1 className="sr-only">Office</h1>
       {canEvents && <EventPopup />}
       {/* dashboard */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">

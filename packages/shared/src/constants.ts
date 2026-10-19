@@ -132,7 +132,7 @@ export type ExtraFlag = (typeof EXTRA_FLAGS)[number];
 export type FeatureFlag = Module | ExtraFlag;
 export const ALL_FLAGS: FeatureFlag[] = [...MODULES, ...EXTRA_FLAGS];
 /** Flags that are OFF by default. Everything else defaults ON. */
-export const FLAGS_DEFAULT_OFF: FeatureFlag[] = ['autoBalancer', 'shorting', 'maintenance', 'chatKillSwitch', 'reviewBombs'];
+export const FLAGS_DEFAULT_OFF: FeatureFlag[] = ['shorting', 'maintenance', 'chatKillSwitch', 'reviewBombs'];
 
 export const SPECIES = ['bot', 'blob', 'critter', 'ghost', 'slime', 'cactus', 'toaster', 'octo'] as const;
 export type Species = (typeof SPECIES)[number];

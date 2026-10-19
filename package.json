@@ -18,7 +18,8 @@
     "test:e2e": "npm run test:e2e -w apps/web",
     "typecheck": "tsc -p packages/shared --noEmit && tsc -p apps/server --noEmit && tsc -p apps/web --noEmit",
     "lint": "eslint .",
-    "simulate": "npm run simulate -w apps/server"
+    "simulate": "npm run simulate -w apps/server --",
+    "loadtest": "npm run loadtest -w apps/server --"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

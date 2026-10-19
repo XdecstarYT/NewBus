@@ -23,7 +23,7 @@ export function News() {
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4">
       <div className="text-center border-b-4 border-double border-ink pb-2">
-        <div className="font-display font-extrabold text-4xl tracking-tight">📰 The Daily Byte</div>
+        <h1 className="font-display font-extrabold text-4xl tracking-tight">📰 The Daily Byte</h1>
         <div className="text-xs muted uppercase tracking-widest">{new Date().toDateString()} · All the news that fits in a byte · Price: free (Bits not accepted)</div>
       </div>
       {!items.length ? (

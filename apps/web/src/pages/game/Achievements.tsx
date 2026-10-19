@@ -51,8 +51,8 @@ function Trophies() {
           <div className="h3 mb-2 capitalize">{list[0].emoji} {group.replace(/([A-Z])/g, ' $1')}</div>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
             {list.map((a: any) => (
-              <div key={a.key} title={`${a.description}${a.unlockedAt ? ` · unlocked ${timeAgo(a.unlockedAt)}` : ''}`} className={`rounded-2xl p-2 text-center ring-4 ${TIER_RING[Math.min(a.tier, 7)]} ${a.unlockedAt ? 'bg-accent/10' : 'bg-ink/5 grayscale opacity-70'}`}>
-                <div className="text-2xl">{a.emoji}</div>
+              <div key={a.key} title={`${a.description}${a.unlockedAt ? ` · unlocked ${timeAgo(a.unlockedAt)}` : ''}`} className={`rounded-2xl p-2 text-center ring-4 ${TIER_RING[Math.min(a.tier, 7)]} ${a.unlockedAt ? 'bg-accent/10' : 'bg-ink/5'}`}>
+                <div className={`text-2xl ${a.unlockedAt ? '' : 'grayscale opacity-50'}`}>{a.emoji}</div>
                 <div className="text-[11px] font-bold leading-tight">{a.name}</div>
                 <div className="text-[10px] muted leading-tight">{a.description}</div>
                 {!a.unlockedAt && <div className="h-1.5 rounded-full bg-ink/10 mt-1 overflow-hidden"><div className="h-full bg-accent" style={{ width: `${Math.min(100, (a.progress / a.target) * 100)}%` }} /></div>}
@@ -94,7 +94,7 @@ function Collection() {
       <div className="flex items-center gap-3"><b className="text-xl">{q.data.found} / {q.data.total}</b><div className="flex-1"><ProgressBar value={q.data.found} max={q.data.total} label="Species x rarity combos hired" /></div></div>
       <table className="text-center text-sm">
         <thead>
-          <tr><th className="text-left">Species</th>{rarities.map((r: string) => <th key={r} className="px-1" style={{ color: (RARITY_INFO as any)[r]?.color }}>{(RARITY_INFO as any)[r]?.label ?? r}</th>)}</tr>
+          <tr><th className="text-left">Species</th>{rarities.map((r: string) => <th key={r} className="px-1"><span className="inline-block w-2.5 h-2.5 rounded-full mr-1" style={{ background: (RARITY_INFO as any)[r]?.color }} aria-hidden />{(RARITY_INFO as any)[r]?.label ?? r}</th>)}</tr>
         </thead>
         <tbody>
           {q.data.grid.map((row: any) => (

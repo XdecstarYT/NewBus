@@ -60,6 +60,17 @@ export function companyIncomeMultiplier(co: Company, now: number) {
   return diff.income * (1 + co.prestigePoints * c.prestige.multPerPoint) * multiplier('income', co, now);
 }
 
+/**
+ * Progressive production tax: income up to the tax-free amount per tick is
+ * untouched; above it a share is never minted. Small companies pay nothing,
+ * runaway empires grow slower. The auto-balancer tunes the rate.
+ */
+export function afterProductionTax(gross: number, c = cfg()) {
+  const free = c.economy.incomeTaxFreePerTick;
+  if (gross <= free) return gross;
+  return free + (gross - free) * (1 - c.economy.incomeTaxRate);
+}
+
 /** Pure-ish projection used by the UI and the tick (no writes). */
 export function projectCompany(co: Company, now = clock.now()) {
   const c = cfg();
@@ -78,9 +89,14 @@ export function projectCompany(co: Company, now = clock.now()) {
   const diff = c.difficulty[co.difficulty] ?? c.difficulty.NORMAL;
   const wages = workers.reduce((s, w) => s + workerWage(w, c, diff.wages), 0) * multiplier('wages', co, now);
   const upkeep = workplaces.reduce((s, w) => s + c.workplaces.upkeepPerTick(w.kind, w.level), 0);
+  const gross = out.income * mult;
+  const net = afterProductionTax(gross, c);
+  const keep = gross > 0 ? net / gross : 1;
   return {
-    incomePerTick: out.income * mult,
-    perWorkplace: Object.fromEntries([...out.perWorkplace].map(([k, v]) => [k, v * mult])),
+    incomePerTick: net,
+    grossIncomePerTick: gross,
+    taxPerTick: gross - net,
+    perWorkplace: Object.fromEntries([...out.perWorkplace].map(([k, v]) => [k, v * mult * keep])),
     wagesPerTick: wages,
     upkeepPerTick: upkeep,
     synergies: out.synergies,
@@ -127,7 +143,7 @@ function tickCompany(co: Company, now: number) {
     const ind = getIndustry(co.industryId);
     const focus = new Map(p.workplaces.map((w) => [w.id, ind.workplaces[w.kind]?.focus]));
     const rolled = live
-      ? companyTickOutput(p.workers as WorkerLike[], p.workplaces, { now, focusOf: (id) => focus.get(id), campaignActive: p.campaignActive, rng, relationBonus: p.relations }, c).income * p.multiplier
+      ? afterProductionTax(companyTickOutput(p.workers as WorkerLike[], p.workplaces, { now, focusOf: (id) => focus.get(id), campaignActive: p.campaignActive, rng, relationBonus: p.relations }, c).income * p.multiplier, c)
       : p.incomePerTick;
     const grossF = rolled * ticks + cr.income;
     const gross = Math.floor(grossF);

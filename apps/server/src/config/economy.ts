@@ -158,6 +158,11 @@ export const economy = {
     /** target inflation band (net bits created / supply per day) for the auto-balancer */
     inflationTargetLow: -0.01,
     inflationTargetHigh: 0.05,
+    /** Progressive production tax: income per tick above the free amount is taxed at this rate (auto-balancer tunes the rate) */
+    incomeTaxFreePerTick: 12,
+    incomeTaxRate: 0.3,
+    /** Treasury keeps this much for rewards; anything above is destroyed (a real money sink) */
+    treasuryReserve: 60_000_000,
   },
 
   bank: {

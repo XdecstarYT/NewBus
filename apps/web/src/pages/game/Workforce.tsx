@@ -69,7 +69,7 @@ export function WorkerCard({ w, onDone }: { w: any; onDone?: () => void }) {
             <div className="font-display font-extrabold text-xl">{w.name}</div>
           )}
           <div className="flex flex-wrap gap-1 mt-1">
-            <span className="chip" style={{ background: r.color, color: '#fff' }}>{r.label}</span>
+            <span className="chip" style={{ background: `${r.color}33`, borderColor: r.color }}>{r.label}</span>
             <span className="chip">{w.archetypeEmoji} {w.archetypeName}</span>
             <span className="chip">{ROLE_EMOJI[w.role]} {w.role}</span>
             <span className="chip">Lv {w.level}</span>
@@ -146,7 +146,7 @@ export function Workforce() {
               <WorkerAvatar species={w.species} color={w.appearance.color} eyes={w.appearance.eyes} accessory={w.appearance.accessory} mood={w.mood} state={workerState(w)} rarity={w.rarity} size={64} />
               <div className="font-bold text-sm text-center leading-tight">{w.name}</div>
               <div className="flex gap-1 flex-wrap justify-center">
-                <span className="chip" style={{ background: RARITY_INFO[w.rarity as keyof typeof RARITY_INFO].color, color: '#fff' }}>{RARITY_INFO[w.rarity as keyof typeof RARITY_INFO].label}</span>
+                <span className="chip" style={{ background: `${RARITY_INFO[w.rarity as keyof typeof RARITY_INFO].color}33`, borderColor: RARITY_INFO[w.rarity as keyof typeof RARITY_INFO].color }}>{RARITY_INFO[w.rarity as keyof typeof RARITY_INFO].label}</span>
                 <span className="chip">Lv {w.level}</span>
               </div>
               <div className="text-[11px] muted">{w.quirkEmoji} {w.quirkName} · {w.workplaceId ? '💼 working' : w.listed ? '🛒 for sale' : '🪑 bench'}</div>

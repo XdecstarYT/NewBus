@@ -69,6 +69,12 @@ export function loadFeatures() {
     if (amount > 0) post({ kind: 'faucet.npc_refill', legs: [{ from: SYS.MINT, to: SYS.NPC, amount }] });
   });
 
+  // Real sink: Bits collected by the Treasury above its reserve are destroyed.
+  registerGlobalHook('treasury-burn', 60_000, () => {
+    const extra = balanceOf(SYS.TREASURY) - cfg().economy.treasuryReserve;
+    if (extra > 0) post({ kind: 'sink.burn', memo: 'Treasury surplus destroyed', legs: [{ from: SYS.TREASURY, to: SYS.MINT, amount: extra }] });
+  });
+
   registerGlobalHook('auto-balancer', 15 * 60_000, () => {
     autoBalance();
   });
