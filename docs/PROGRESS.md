@@ -55,6 +55,20 @@
   - **Demo:** the demo companies start with two stocked, listed products so there is something to sell.
   - **Tests:** `test/pos.test.ts` and the two-player e2e `e2e/pos.spec.ts`.
 - **Owner login fix:** `01` / `Diddy` works again. A blank `OWNER_PASSWORD` no longer creates a passwordless owner, the server repairs an empty one on boot, `OWNER_RESET_PASSWORD=true` resets it, `1` is accepted as `01`, and running with `COOKIE_SECURE=true` over plain http no longer gives a blank page.
+- **Strategy layer:**
+  - **♟️ Strategy Room:** 500 actions (10 categories x 10 plays x 5 tiers, unlocking at levels 1/5/12/22/35), shared between server and web in `packages/shared/src/strategy.ts`. Plays cost Bits (a sink), run for a while, and boost income, customers, speed, research, wages, mood or quality through the temporary-modifier system. They also add influence, legal strength, reputation, district presence or audit risk. Risky plays can backfire, and a company can run 6 at once with per-play cooldowns.
+  - **Policies:** pricing, labour and risk appetite; one change per hour.
+  - **Territory:** 8 districts. Expansion plays add presence in your focus district and presence fades about 0.5% a minute. A company with 35%+ share (and at least 10 points) controls a district, and each controlled district gives +5% customers (up to 3).
+  - **Bills:** the Owner introduces laws from templates; companies and union presidents lobby with influence. Passed laws apply global modifiers or change audit risk.
+  - **Unions:** create/join/leave, a rep per member business, President / Vice President / Treasurer elected for 3-day terms (nominations 30 min, voting 60 min, one vote per business), early elections, votes of no confidence, resignations, daily dues with expulsion after 3 missed days, a treasury wallet in the ledger, 6 collective moves, and +1% income per 3 members (up to +5%).
+  - **Justice:**
+    - Tax audits estimate hidden income from shady plays by depth and audit risk, suggest a fine, and close as clean, warning, fined (optional freeze) or referred to court.
+    - Court cases cover company v. company or State v. company: filing fees, evidence with weights and costs, settlements, Owner verdicts, one appeal with a 24 h window, an auto-judge, and remedies (damages, fines, freezes, licence suspensions) applied once the appeal window closes.
+    - Sanctions plug into spending (`registerSpendGuard`) and permissions (`registerAccessFilter`).
+  - **Owner Panel:** a new 🏛️ Justice & Politics tab.
+  - **Player pages:** ♟️ Strategy Room, ✊ Unions and ⚖️ Courthouse.
+  - **Access:** new modules `strategy`, `unions` and `court`. Companies saved before these existed get them if they already have Marketplace.
+  - **Tests:** `test/strategy.test.ts` (9 tests) and `e2e/strategy.spec.ts` (3 browser tests).
 
 ## Still open / ideas
 - Supabase writes trail the game by up to ~2 seconds (a hard crash loses at most those seconds). Only one game server should write to a given Supabase project at a time.

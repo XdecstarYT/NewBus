@@ -18,7 +18,6 @@ import { reseedLive } from '../src/engine/rng';
 let app: Express;
 const owner = () => getAccountByNumber('01')!.id;
 const bal = (id: string) => balanceOf(companyWallet(id));
-const setLevel = (id: string, level: number) => db.update(schema.companies).set({ level }).where(eq(schema.companies.id, id)).run();
 
 describe('strategy layer', () => {
   beforeAll(() => {

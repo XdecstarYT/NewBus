@@ -25,6 +25,9 @@ import { Research } from './Research';
 import { Achievements } from './Achievements';
 import { Quests } from './Quests';
 import { Pos } from './Pos';
+import { Strategy } from './Strategy';
+import { Unions, UnionPage } from './Unions';
+import { Court, CaseDetail } from './Court';
 import { Shops, Storefront, MyOrders, Pay } from './Shops';
 
 /** Renders the page only if the module is enabled for this login; otherwise a funny lock screen. */
@@ -61,6 +64,11 @@ export const gameRoutes: Array<{ path: string; element: ReactNode }> = [
   { path: '/research', element: g('research', <Research />) },
   { path: '/achievements', element: g('achievements', <Achievements />) },
   { path: '/quests', element: g(undefined, <Quests />) },
+  { path: '/strategy', element: g('strategy', <Strategy />) },
+  { path: '/unions', element: g('unions', <Unions />) },
+  { path: '/unions/:id', element: g('unions', <UnionPage />) },
+  { path: '/court', element: g('court', <Court />) },
+  { path: '/court/:id', element: g('court', <CaseDetail />) },
   { path: '/pos', element: g('products', <Pos />) },
   { path: '/shops', element: g('marketplace', <Shops />) },
   { path: '/shops/:id', element: g('marketplace', <Storefront />) },

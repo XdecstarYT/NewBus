@@ -23,6 +23,7 @@ and keep the game fun and fair. Everything happens in the **Owner Control Panel*
 | 📊 Economy | Inflation, inequality, faucets and sinks, suggestions. The auto-balancer is on by default (see [ECONOMY.md](ECONOMY.md)). |
 | 📈 Market | Approve IPOs, halt or delist stocks, price modes, bonds, index funds, market events. |
 | 🤝 Social | Business Wars, trade fairs, guilds, Daily Byte generators. |
+| 🏛️ Justice & Politics | **Tax audits** (desk / field / forensic; clear, warn, fine, freeze or refer to court), the **court bench** (rule on cases, set damages, fines, asset freezes and licence suspensions; the auto-judge rules if you don't within 2 h of the hearing), the State's own lawsuits, **sanctions**, **bills** (introduce, sign, veto; companies lobby with influence), unions (dissolve) and district territory. |
 | 🌪️ Chaos & Seasons | Credit Rain, Double-Bits Hour, summon a Legendary, crash or boom, Boss Byte broadcasts, office events; start and end **seasons** (season pass, prizes, Hall of Fame). |
 | 🧮 Analytics | Active players (today, 7 and 30 days), daily activity charts, popular industries, feature usage. |
 | 🕵️ Anti-cheat | Flags (impossible mini-game scores, rapid-fire requests and more), accounts sharing an IP, linked accounts, big gifts, arcade outliers. |

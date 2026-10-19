@@ -111,6 +111,15 @@ Print from the game's real address (your Wi-Fi address or hosted URL), not `loca
 - **Selling online:** anything you list as on sale shows up in **🛒 Shops**. Customers pay now or at pickup and get a pickup code. Find the code under **Online orders** and hand the order over.
 - **Tax:** every sale includes 5% sales tax, which goes to the Treasury.
 
+### ♟️ Strategy, unions and justice
+- **♟️ Strategy Room:** 500 timed plays across 10 categories (Marketing, Operations, Finance, People, R&D, Sales, Legal, Lobbying, Expansion and Shady Deals), each in 5 tiers that unlock with company level. Players also set company policies, fight for control of 8 market districts, and spend influence lobbying on bills.
+- **✊ Unions:** businesses join together, and each one names a rep. Members elect a President, Vice President and Treasurer every 3 days (or early), can hold votes of no confidence, pay daily dues, and use the treasury for collective bargaining, co-op marketing, strikes, grants and lobbying.
+- **⚖️ Courthouse:** companies sue each other, file evidence, offer settlements and appeal once. The Owner is the judge; if you don't rule within 2 hours of the hearing, the auto-judge decides on the evidence.
+- **Your powers (Owner Panel → 🏛️ Justice & Politics):**
+  - **Tax audits:** desk, field and forensic audits find income hidden by shady deals. You then clear the company, warn it, fine it (optionally freezing its assets) or take it to court.
+  - **Court:** take any company to court as the State, rule on every case, and order damages, fines, asset freezes and licence suspensions (switching off a module for a while).
+  - **Laws and unions:** introduce bills, sign or veto them, impose or lift sanctions, and dissolve unions.
+
 ### 🌪️ Chaos & Seasons
 
 **Owner Control Panel → 🌪️ Chaos & Seasons** has the fun buttons: Credit Rain (Bits for every active company), Double-Bits Hour, summon a Legendary worker, market crash or boom, Boss Byte broadcasts and office events. Start a **season** there to reset the season leaderboard, open a free cosmetic season pass, and pay prizes to the top 10 when it ends. Winners go into the Hall of Fame.

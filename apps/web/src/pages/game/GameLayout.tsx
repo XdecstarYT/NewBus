@@ -21,6 +21,10 @@ export function useGameMe(): Me {
   if (!me) throw new Error('No game context');
   return me;
 }
+/** Like useGameMe, but null outside the game (e.g. a page reused in the Owner Panel). */
+export function useMaybeGameMe(): Me | null {
+  return useContext(MeContext);
+}
 /** Route prefix ("" normally, "/viewas/<id>" when the owner previews a company). */
 export function useBase() {
   const { companyId } = useParams();
