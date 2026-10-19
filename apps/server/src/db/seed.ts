@@ -15,6 +15,9 @@ import { SYS, post, balanceOf } from '../services/ledger';
 import { economy } from '../config/economy';
 import { seedTemplates } from '../services/owner';
 import { createCompany } from '../services/companies';
+import { productsFor } from '../services/catalog';
+import { addStock } from '../services/inventory';
+import { setPricing } from '../services/products';
 import { runSeedHooks } from './seed-hooks';
 
 export function seedAll(opts: { demo?: boolean; quiet?: boolean } = {}) {
@@ -106,6 +109,11 @@ export function seedData(opts: { demo?: boolean; quiet?: boolean } = {}) {
         },
         null,
       );
+      // a stocked shelf so the POS and online shops have something to sell straight away
+      for (const p of productsFor(d.industryId).slice(0, 2)) {
+        addStock(res.company.id, 'product', p.id, 40, 70);
+        setPricing(res.company.id, p.id, { onSale: true });
+      }
       say(`🏢 Demo company ${d.emoji} ${d.name} -> login ${res.account.accountNumber} / demo1234`);
     }
   }

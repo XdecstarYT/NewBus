@@ -48,6 +48,14 @@
   - **Verified:** tests against a real Postgres engine (PGlite) cover the full upload, streaming and rebuilding a fresh server. An end-to-end run against Postgres 17 had server 1 upload, play and shut down, then server 2 on a blank disk reloaded 6,904 rows and the player logged straight in. The schema is applied to the real Supabase project.
   - **Hosting:** Render can now run on the free plan (no disk).
 
+- **POS & online shops:**
+  - **Register (🧾 POS):** a business taps products onto a sale, adds an optional discount, and hits Charge. The screen shows a 6-letter code and a QR that opens `/pay/<code>`; the customer's company pays from its own wallet and the register flips to PAID live.
+  - **Online shops (🛒 Shops):** players browse businesses with stock, fill a basket and either pay now or pay at pickup. Stock is reserved when the order is placed. The buyer gets a pickup code and QR; the seller marks the order ready, looks up the code (typed or scanned) and hands it over, taking payment through a register code if it wasn't paid online.
+  - **Money:** sales tax (`economy.salesTaxBps`, 5%) goes to the Treasury, the rest to the seller, all through the ledger. Linked companies can't trade, and spend caps apply. Cancelling refunds the payment and puts the stock back.
+  - **Demo:** the demo companies start with two stocked, listed products so there is something to sell.
+  - **Tests:** `test/pos.test.ts` and the two-player e2e `e2e/pos.spec.ts`.
+- **Owner login fix:** `01` / `Diddy` works again. A blank `OWNER_PASSWORD` no longer creates a passwordless owner, the server repairs an empty one on boot, `OWNER_RESET_PASSWORD=true` resets it, `1` is accepted as `01`, and running with `COOKIE_SECURE=true` over plain http no longer gives a blank page.
+
 ## Still open / ideas
 - Supabase writes trail the game by up to ~2 seconds (a hard crash loses at most those seconds). Only one game server should write to a given Supabase project at a time.
 - Options and margin trading are only partly built (short selling is behind the `shorting` flag; there is no options chain).

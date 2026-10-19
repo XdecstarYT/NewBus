@@ -24,6 +24,8 @@ import { Arcade } from './Arcade';
 import { Research } from './Research';
 import { Achievements } from './Achievements';
 import { Quests } from './Quests';
+import { Pos } from './Pos';
+import { Shops, Storefront, MyOrders, Pay } from './Shops';
 
 /** Renders the page only if the module is enabled for this login; otherwise a funny lock screen. */
 function Guard({ module, children }: { module?: Module; children: ReactNode }) {
@@ -59,6 +61,12 @@ export const gameRoutes: Array<{ path: string; element: ReactNode }> = [
   { path: '/research', element: g('research', <Research />) },
   { path: '/achievements', element: g('achievements', <Achievements />) },
   { path: '/quests', element: g(undefined, <Quests />) },
+  { path: '/pos', element: g('products', <Pos />) },
+  { path: '/shops', element: g('marketplace', <Shops />) },
+  { path: '/shops/:id', element: g('marketplace', <Storefront />) },
+  { path: '/orders', element: g('marketplace', <MyOrders />) },
+  { path: '/pay', element: g('marketplace', <Pay />) },
+  { path: '/pay/:code', element: g('marketplace', <Pay />) },
   { path: '/packages', element: g(undefined, <Packages />) },
   { path: '/redeem/:code', element: g(undefined, <Packages />) },
   { path: '/profile', element: g(undefined, <Profile />) },

@@ -44,6 +44,7 @@ import { newsTick } from './services/newsgen';
 import { registerPackageRoutes } from './routes/packages';
 import { registerMegaRoutes } from './routes/mega';
 import { registerOpsRoutes } from './routes/ops';
+import { registerPosRoutes } from './routes/pos';
 import { createBackup } from './services/ops';
 import { env } from './env';
 import { log } from './lib/log';
@@ -143,6 +144,7 @@ export function loadFeatures() {
   onLevelUp((companyId) => checkAchievements(companyId));
   loadSeason();
   registerOpsRoutes();
+  registerPosRoutes();
   if (env.databasePath !== ':memory:' && env.backupEveryHours > 0) {
     registerJob('scheduled-backup', env.backupEveryHours * 3600_000, () => {
       createBackup('auto').catch((e) => log.error('scheduled backup failed', { err: String(e) }));

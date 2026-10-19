@@ -48,6 +48,8 @@ export function navItems(me: Me): NavItem[] {
     out.push({ path: info.path, label: info.label, emoji: info.emoji });
   }
   if (me.access.modules.exchange && !seen.has('/portfolio')) out.push({ path: '/portfolio', label: 'Portfolio', emoji: '💼' });
+  if (me.access.modules.products) out.push({ path: '/pos', label: 'POS Register', emoji: '🧾' });
+  if (me.access.modules.marketplace) out.push({ path: '/shops', label: 'Shops', emoji: '🛒' }, { path: '/pay', label: 'Pay', emoji: '💳' });
   out.push({ path: '/quests', label: 'Quests & Season', emoji: '🗺️' });
   if (me.flags?.realPackages) out.push({ path: '/packages', label: 'Packages', emoji: '📦' });
   out.push({ path: '/profile', label: 'Profile', emoji: '🪪' });

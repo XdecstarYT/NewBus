@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 
 test('every game page opens without errors', async ({ page }) => {
   const check = await noConsoleErrors(page);
-  for (const path of ['/office', '/workforce', '/pods', '/contracts', '/minigames', '/bank', '/products', '/exchange', '/leaderboard', '/achievements', '/research', '/quests', '/chat', '/guilds', '/wars', '/news', '/shop', '/packages', '/profile', '/settings']) {
+  for (const path of ['/office', '/workforce', '/pods', '/contracts', '/minigames', '/bank', '/products', '/exchange', '/leaderboard', '/achievements', '/research', '/quests', '/chat', '/guilds', '/wars', '/news', '/shop', '/pos', '/shops', '/orders', '/pay', '/packages', '/profile', '/settings']) {
     await page.goto(path);
     await dismissPopups(page);
     await expect(page.locator('h1').first(), path).toBeAttached();

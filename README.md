@@ -106,6 +106,11 @@ Hand out real, physical rewards: **Owner Control Panel → 📦 Packages**.
 
 Print from the game's real address (your Wi-Fi address or hosted URL), not `localhost`, so the QR codes work on other people's phones. Bits come from the Treasury, codes are random, and wrong guesses are limited. **Packages** shows who opened what, and **Void** kills a batch of codes. To turn the whole feature off: **Flags & settings → Real-life packages**.
 
+### 🧾 POS registers and online shops
+- **Selling in person:** open **🧾 POS Register**, tap products, press **Charge**. The customer scans the QR with their phone (or opens **💳 Pay** and types the code) and pays with their company's Bits.
+- **Selling online:** anything you list as on sale shows up in **🛒 Shops**. Customers pay now or at pickup and get a pickup code. Find the code under **Online orders** and hand the order over.
+- **Tax:** every sale includes 5% sales tax, which goes to the Treasury.
+
 ### 🌪️ Chaos & Seasons
 
 **Owner Control Panel → 🌪️ Chaos & Seasons** has the fun buttons: Credit Rain (Bits for every active company), Double-Bits Hour, summon a Legendary worker, market crash or boom, Boss Byte broadcasts and office events. Start a **season** there to reset the season leaderboard, open a free cosmetic season pass, and pay prizes to the top 10 when it ends. Winners go into the Hall of Fame.

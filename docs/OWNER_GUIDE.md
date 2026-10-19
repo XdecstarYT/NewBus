@@ -27,6 +27,7 @@ and keep the game fun and fair. Everything happens in the **Owner Control Panel*
 | 🧮 Analytics | Active players (today, 7 and 30 days), daily activity charts, popular industries, feature usage. |
 | 🕵️ Anti-cheat | Flags (impossible mini-game scores, rapid-fire requests and more), accounts sharing an IP, linked accounts, big gifts, arcade outliers. |
 | 💾 Backups | Back up now, download, **restore** (a safety backup is taken first), automatic backups every `BACKUP_EVERY_HOURS`; export and import your settings file. |
+| 🧾 POS & 🛒 Shops | Not an owner tab: players use them. A company with the **Products** module gets a POS register; one with **Marketplace** can shop online and pay at registers. Switch either module off in a company's permissions to block it. The sales tax is `economy.salesTaxBps` in Flags & settings. |
 | 📦 Packages | Real-life QR cards that players scan to unbox rewards. |
 | 🛡️ Moderation | Reports queue, live chat with delete, chat logs, mutes and kicks, audit log. You can create Moderator accounts with just the tools you choose. |
 | 📚 Catalog | Edit industries and products, import and export CSV. |

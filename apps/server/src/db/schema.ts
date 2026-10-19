@@ -864,6 +864,65 @@ export const packageClaims = sqliteTable(
   (t) => [primaryKey({ columns: [t.packageId, t.companyId] })],
 );
 
+// ---------------------------------------------------------------- POS + online shops
+export interface PosLine {
+  productId: string;
+  name: string;
+  emoji: string;
+  qty: number;
+  unitPrice: number;
+  /** quality of reserved units (online orders) */
+  quality?: number;
+}
+
+/** A sale rung up at a business's register, waiting for a customer to pay (scan the QR / type the code). */
+export const posCheckouts = sqliteTable(
+  'pos_checkouts',
+  {
+    id: text('id').primaryKey(),
+    code: text('code').notNull(),
+    sellerId: text('seller_id').notNull(),
+    buyerId: text('buyer_id'),
+    orderId: text('order_id'),
+    items: json<PosLine[]>('items').notNull(),
+    subtotal: integer('subtotal').notNull(),
+    discountPct: integer('discount_pct').notNull().default(0),
+    tax: integer('tax').notNull(),
+    total: integer('total').notNull(),
+    status: text('status').notNull(), // open | paid | cancelled | expired
+    createdBy: text('created_by'),
+    paidBy: text('paid_by'),
+    createdAt: ts('created_at').notNull(),
+    paidAt: ts('paid_at'),
+    expiresAt: ts('expires_at').notNull(),
+  },
+  (t) => [uniqueIndex('pos_code_idx').on(t.code), index('pos_seller_idx').on(t.sellerId, t.createdAt)],
+);
+
+/** An online order from another player's company: pay now or pay at pickup. */
+export const shopOrders = sqliteTable(
+  'shop_orders',
+  {
+    id: text('id').primaryKey(),
+    pickupCode: text('pickup_code').notNull(),
+    sellerId: text('seller_id').notNull(),
+    buyerId: text('buyer_id').notNull(),
+    buyerAccountId: text('buyer_account_id'),
+    items: json<PosLine[]>('items').notNull(),
+    subtotal: integer('subtotal').notNull(),
+    tax: integer('tax').notNull(),
+    total: integer('total').notNull(),
+    payMode: text('pay_mode').notNull(), // now | pickup
+    paid: bool('paid').notNull().default(false),
+    status: text('status').notNull(), // placed | ready | collected | cancelled
+    note: text('note').notNull().default(''),
+    createdAt: ts('created_at').notNull(),
+    readyAt: ts('ready_at'),
+    collectedAt: ts('collected_at'),
+  },
+  (t) => [uniqueIndex('shop_orders_code_idx').on(t.pickupCode), index('shop_orders_seller_idx').on(t.sellerId, t.status), index('shop_orders_buyer_idx').on(t.buyerId, t.status)],
+);
+
 export const chatMessages = sqliteTable(
   'chat_messages',
   {
