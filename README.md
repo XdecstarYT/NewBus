@@ -124,6 +124,11 @@ Print from the game's real address (your Wi-Fi address or hosted URL), not `loca
 
 **Owner Control Panel → 🌪️ Chaos & Seasons** has the fun buttons: Credit Rain (Bits for every active company), Double-Bits Hour, summon a Legendary worker, market crash or boom, Boss Byte broadcasts and office events. Start a **season** there to reset the season leaderboard, open a free cosmetic season pass, and pay prizes to the top 10 when it ends. Winners go into the Hall of Fame.
 
+### Login says "Can't reach the game server" (or "Request failed (404)")?
+The page you opened is not connected to the game server, so the login address does not exist there. This game is one app: the server serves the pages **and** the `/api` they talk to.
+- **On your computer:** run `npm run dev` from the project folder and open http://localhost:5173, or run `npm run build` then `npm start` and open http://localhost:3000. Opening `apps/web/dist/index.html` directly, or running only the web part, won't work.
+- **Online:** deploy the whole repo with Render (or Docker) as described above. Static hosts such as GitHub Pages, Netlify, Vercel or Lovable only serve the pages, not the game server.
+
 ### Can't log in as the owner?
 
 - **Account number:** `01` (typing `1` also works). **Password:** `Diddy`, unless you set `OWNER_PASSWORD`.
