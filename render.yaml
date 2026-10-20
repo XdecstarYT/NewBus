@@ -24,3 +24,9 @@ services:
         value: "false" # set to "true" for one deploy if you ever get locked out
       - key: SEED_DEMO
         value: "false"
+      # Hosting the pages on Netlify? Set PUBLIC_URL to your Netlify address (e.g. https://my-game.netlify.app)
+      # and TRUST_PROXY to "2" (Netlify + Render). Leave both alone when players use the Render address.
+      - key: PUBLIC_URL
+        sync: false
+      - key: TRUST_PROXY
+        value: "1"

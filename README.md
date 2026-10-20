@@ -87,6 +87,18 @@ A brand-new server sets itself up automatically: database, the 210 industries, t
 
 ---
 
+### 4. Keep your Netlify address (Netlify for the pages + Render for the game server)
+Netlify only serves web pages; it can't run the game server, which has to stay on and keep live connections open. So the server runs on Render (free) and Netlify forwards the game's requests to it. Players only ever see your Netlify address.
+
+1. **Start the game server on Render:** follow step 3 above (Render → New → Blueprint → this repo, paste your Supabase `DATABASE_URL`). When it is live, copy its address, e.g. `https://digital-workforce.onrender.com`.
+2. **Tell Render about Netlify:** in Render → your service → *Environment*, set:
+   - `PUBLIC_URL` = your Netlify address, e.g. `https://my-game.netlify.app` (lets the live connection in and makes QR codes point at Netlify)
+   - `TRUST_PROXY` = `2` (so the game sees each player's real address, not Netlify's)
+3. **Point Netlify at the server:** in Netlify → *Site configuration* → *Environment variables*, add `GAME_SERVER_URL` = the Render address from step 1.
+4. **Redeploy on Netlify** (*Deploys* → *Trigger deploy* → *Clear cache and deploy site*). The repo's `netlify.toml` already sets the build: it builds the pages and forwards `/api` to `GAME_SERVER_URL`. If the variable is missing, the build stops with a message saying so.
+
+Open your Netlify address and log in as `01` / `Diddy`. On Render's free plan the server sleeps after ~15 minutes alone; the first visit after that can take ~30–60 seconds (the login screen says the server is waking up; try again).
+
 ## Owner quick guide
 
 1. **Log in** as `01`. In production you change the password straight away.
@@ -127,7 +139,7 @@ Print from the game's real address (your Wi-Fi address or hosted URL), not `loca
 ### Login says "Can't reach the game server" (or "Request failed (404)")?
 The page you opened is not connected to the game server, so the login address does not exist there. This game is one app: the server serves the pages **and** the `/api` they talk to.
 - **On your computer:** run `npm run dev` from the project folder and open http://localhost:5173, or run `npm run build` then `npm start` and open http://localhost:3000. Opening `apps/web/dist/index.html` directly, or running only the web part, won't work.
-- **Online:** deploy the whole repo with Render (or Docker) as described above. Static hosts such as GitHub Pages, Netlify, Vercel or Lovable only serve the pages, not the game server.
+- **Online:** deploy the whole repo with Render (or Docker) as described above. Static hosts such as GitHub Pages, Netlify, Vercel or Lovable only serve the pages, not the game server. For Netlify, follow "Keep your Netlify address" above.
 
 ### Can't log in as the owner?
 

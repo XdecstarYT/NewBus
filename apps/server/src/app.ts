@@ -28,7 +28,7 @@ const lastActiveTouch = new Map<string, number>();
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
-  app.set('trust proxy', 1);
+  app.set('trust proxy', env.trustProxy);
 
   // Security headers. The https-only ones (HSTS, upgrade-insecure-requests, COOP) are sent only
   // when the request really arrived over https, so plain-http play (home Wi-Fi) can never be

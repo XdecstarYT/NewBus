@@ -7,10 +7,28 @@ let retry = 0;
 let wanted = false;
 let timer: number | undefined;
 
-export function connectWs() {
+// Set at build time when the pages are hosted apart from the game server (Netlify).
+const DIRECT_WS: string = import.meta.env.VITE_WS_URL ?? '';
+let opening = false;
+
+export async function connectWs() {
   wanted = true;
-  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
-  const url = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
+  if (opening || (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING))) return;
+  let url = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
+  if (DIRECT_WS) {
+    opening = true;
+    try {
+      const r = await fetch('/api/auth/ws-ticket', { credentials: 'same-origin' });
+      const { ticket } = await r.json();
+      url = `${DIRECT_WS}?ticket=${encodeURIComponent(ticket)}`;
+    } catch {
+      opening = false;
+      if (wanted) timer = window.setTimeout(connectWs, 5000);
+      return;
+    }
+    opening = false;
+    if (!wanted) return;
+  }
   socket = new WebSocket(url);
   socket.onopen = () => {
     retry = 0;

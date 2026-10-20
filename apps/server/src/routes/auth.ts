@@ -14,6 +14,7 @@ import { findIndustry } from '../services/catalog';
 import { SESSION_COOKIE } from '../lib/cookies';
 import { SESSION_TTL_MS } from '../services/auth';
 import { audit } from '../services/audit';
+import { issueWsTicket } from '../ws/hub';
 
 export function publicFlags() {
   const f = getFlags();
@@ -86,6 +87,13 @@ export function authRouter() {
       res.clearCookie(SESSION_COOKIE, { path: '/' });
       return { ok: true };
     }),
+  );
+
+  // A one-minute pass for the live connection when it goes straight to the server (Netlify hosting)
+  r.get(
+    '/ws-ticket',
+    requireAuth,
+    h((req) => ({ ticket: issueWsTicket(req.cookies?.[SESSION_COOKIE]) })),
   );
 
   r.get(

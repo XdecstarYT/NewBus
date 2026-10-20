@@ -1,0 +1,14 @@
+# Netlify hosts the pages; the game server runs on Render (see README "Hosting on Netlify").
+# Set GAME_SERVER_URL in Netlify to the Render address, e.g. https://digital-workforce.onrender.com
+[build]
+  command = "npm run build && node scripts/netlify-redirects.mjs"
+  publish = "apps/web/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"

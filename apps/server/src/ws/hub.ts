@@ -4,6 +4,7 @@
  * forwards bus messages to subscribed sockets.
  */
 import type { Server as HttpServer, IncomingMessage } from 'node:http';
+import { randomBytes } from 'node:crypto';
 import { WebSocketServer, WebSocket } from 'ws';
 import { wsClientMessageSchema } from '@dw/shared';
 import { sessionFromToken, getAccount } from '../services/auth';
@@ -29,6 +30,24 @@ let chatHandler: ((c: { accountId: string; channel: string; text: string }) => {
 /** Chat service registers itself here (keeps the hub transport-only). */
 export function setChatHandler(fn: typeof chatHandler) {
   chatHandler = fn;
+}
+
+// One-time passes for browsers whose pages live on another site (Netlify) and so
+// can not send the session cookie to this server's WebSocket.
+const tickets = new Map<string, { token: string; expires: number }>();
+export function issueWsTicket(sessionToken: string) {
+  const now = Date.now();
+  for (const [k, v] of tickets) if (v.expires < now) tickets.delete(k);
+  const ticket = randomBytes(24).toString('base64url');
+  tickets.set(ticket, { token: sessionToken, expires: now + 60_000 });
+  return ticket;
+}
+function redeemTicket(url: string | undefined) {
+  const ticket = new URL(url ?? '/', 'http://x').searchParams.get('ticket');
+  if (!ticket) return undefined;
+  const t = tickets.get(ticket);
+  tickets.delete(ticket);
+  return t && t.expires >= Date.now() ? t.token : undefined;
 }
 
 function parseCookies(header: string | undefined): Record<string, string> {
@@ -69,7 +88,7 @@ export function attachWebSocket(server: HttpServer) {
       socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
       return socket.destroy();
     }
-    const found = sessionFromToken(parseCookies(req.headers.cookie)[SESSION_COOKIE]);
+    const found = sessionFromToken(redeemTicket(req.url) ?? parseCookies(req.headers.cookie)[SESSION_COOKIE]);
     if (!found) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
       return socket.destroy();

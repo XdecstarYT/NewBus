@@ -23,6 +23,8 @@ export const env = {
   ownerReset: process.env.OWNER_RESET_PASSWORD === 'true',
   appSecret: process.env.APP_SECRET ?? 'dev-secret-change-me',
   corsOrigins: [...(process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://localhost:3000').split(','), process.env.PUBLIC_URL ?? '', process.env.RENDER_EXTERNAL_URL ?? ''].map((s) => s.trim().replace(/\/$/, '')).filter(Boolean),
+  /** Proxy hops in front of the server: 1 on Render, 2 when Netlify forwards to Render. */
+  trustProxy: Math.max(0, Number(process.env.TRUST_PROXY ?? 1) || 0),
   cookieSecure: process.env.COOKIE_SECURE === 'true',
   backupDir: resolveFromRepo(process.env.BACKUP_DIR ?? './backups'),
   backupKeep: Number(process.env.BACKUP_KEEP ?? 10),
