@@ -1,12 +1,28 @@
-# Netlify hosts the pages; the game server runs on Render (see README "Hosting on Netlify").
-# Set GAME_SERVER_URL in Netlify to the Render address, e.g. https://digital-workforce.onrender.com
+# Digital Workforce Live on Netlify + Supabase.
+# Netlify serves the pages and runs the API as a function; Supabase holds the data.
+# Set DATABASE_URL in Netlify (Site configuration > Environment variables) to your
+# Supabase "Transaction pooler" connection string. That is the only required setting.
 [build]
-  command = "npm run build && node scripts/netlify-redirects.mjs"
+  command = "npm run build"
   publish = "apps/web/dist"
 
 [build.environment]
   NODE_VERSION = "20"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 
 [[headers]]
   for = "/sw.js"

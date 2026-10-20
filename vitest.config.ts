@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
-// Delegate to the server project so tests always use its in-memory database config.
+// Tests live in the API package (they run on an in-process Postgres).
 export default defineConfig({
-  test: { projects: ['apps/server'] },
+  test: { projects: ['apps/api'] },
 });

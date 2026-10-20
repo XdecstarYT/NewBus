@@ -24,7 +24,7 @@ export function Login() {
     setPhase('scanning');
     sfx.whoosh();
     try {
-      const me = await POST<Me>('/auth/login', { accountNumber: accountNumber.trim(), password, totp: needTotp ? totp : undefined });
+      const me = await POST<Me>('/auth/login', { number: accountNumber.trim(), password });
       await new Promise((r) => setTimeout(r, 700));
       setPhase('granted');
       sfx.levelUp();
@@ -54,10 +54,8 @@ export function Login() {
               {welcome.company.emoji}
             </motion.div>
             <h1 className="h1">Welcome to {welcome.company.name}!</h1>
-            <p className="muted mt-1">
-              {welcome.company.industryEmoji} {welcome.company.industryName}
-            </p>
-            <p className="mt-3 font-bold">Your workers have been waiting. Some of them are napping.</p>
+            <p className="muted mt-1">{welcome.company.slogan}</p>
+            <p className="mt-3 font-bold">Your friends are trading. Time to get to work!</p>
             <BossByteFace mood="happy" size={80} className="mx-auto mt-3 animate-bob" />
           </motion.div>
         ) : (
@@ -92,7 +90,7 @@ export function Login() {
                 autoComplete="username"
                 placeholder="01"
                 value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                onChange={(e) => setAccountNumber(e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 10))}
                 required
               />
               <label className="label mt-3" htmlFor="pw">

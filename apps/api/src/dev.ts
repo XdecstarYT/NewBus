@@ -15,14 +15,27 @@ const PORT = Number(process.env.API_PORT ?? 8888);
 if (!databaseUrl()) {
   const { PGlite } = await import('@electric-sql/pglite');
   const { drizzle } = await import('drizzle-orm/pglite');
-  const dir = path.resolve(import.meta.dirname, '../../../data/pglite');
-  fs.mkdirSync(dir, { recursive: true });
-  useDb(drizzle(new PGlite(dir), { schema }) as unknown as Db);
+  const dir = process.env.PGLITE_DIR ?? path.resolve(import.meta.dirname, '../../../data/pglite');
+  if (dir !== 'memory') fs.mkdirSync(dir, { recursive: true });
+  useDb(drizzle(dir === 'memory' ? new PGlite() : new PGlite(dir), { schema }) as unknown as Db);
   console.log(`🗄️  Local database: ${dir} (set DATABASE_URL to use Supabase instead)`);
+}
+
+// Serve the built web app too (like Netlify does), so `npm run build && npm start` is one address.
+const DIST = path.resolve(import.meta.dirname, '../../web/dist');
+const TYPES: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png' };
+function serveStatic(url: string, res: http.ServerResponse) {
+  if (!fs.existsSync(DIST)) return false;
+  let file = path.join(DIST, decodeURIComponent(url.split('?')[0]));
+  if (!file.startsWith(DIST) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(DIST, 'index.html');
+  res.writeHead(200, { 'content-type': TYPES[path.extname(file)] ?? 'application/octet-stream' });
+  fs.createReadStream(file).pipe(res);
+  return true;
 }
 
 http
   .createServer(async (req, res) => {
+    if (!req.url?.startsWith('/api') && serveStatic(req.url ?? '/', res)) return;
     const chunks: Buffer[] = [];
     for await (const ch of req) chunks.push(ch as Buffer);
     const body = chunks.length ? Buffer.concat(chunks) : undefined;

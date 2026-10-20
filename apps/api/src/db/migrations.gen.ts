@@ -6,6 +6,6 @@ export const MIGRATIONS: Array<{ name: string; sql: string }> = [
   },
   {
     "name": "9000_platform",
-    "sql": "-- Live hints: tell browsers \"something changed on <topic>\" through Supabase Realtime.\n-- Outside Supabase (tests, plain Postgres) there is no realtime schema, so this quietly does nothing.\nCREATE OR REPLACE FUNCTION live.hint(topic text, payload jsonb) RETURNS void\nLANGUAGE plpgsql AS $$\nBEGIN\n  BEGIN\n    PERFORM realtime.send(payload, 'hint', topic, false);\n  EXCEPTION WHEN undefined_function OR invalid_schema_name THEN\n    NULL;\n  END;\nEND;\n$$;\n"
+    "sql": "-- Live hints: tell browsers \"something changed on <topic>\" through Supabase Realtime.\n-- Outside Supabase (tests, plain Postgres) there is no realtime schema, so this quietly does nothing.\nCREATE OR REPLACE FUNCTION live.hint(topic text, payload jsonb) RETURNS void\nLANGUAGE plpgsql AS $$\nBEGIN\n  BEGIN\n    PERFORM realtime.send(payload, 'hint', topic, false);\n  EXCEPTION WHEN OTHERS THEN -- a missed hint must never undo a game action\n    NULL;\n  END;\nEND;\n$$;\n"
   }
 ];

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { POST } from '../lib/api';
-import { useAction, type Me } from '../lib/hooks';
+import { useAction } from '../lib/hooks';
 import { BossByteFace } from '../components/BossByte';
 import { t } from '../i18n';
 import { useStore } from '../lib/store';
@@ -12,10 +12,10 @@ export function ChangePasswordForm({ onDone, compact = false, owner = false }: {
   const [next, setNext] = useState('');
   const [again, setAgain] = useState('');
   const confetti = useStore((s) => s.confetti);
-  const act = useAction((v: { currentPassword: string; newPassword: string }) => POST<Me>('/auth/change-password', v), {
+  const act = useAction((v: { current: string; next: string }) => POST('/auth/password', v), {
     success: 'Password saved! Your secret is safe with Boss Byte.',
-    onSuccess: (me) => {
-      qc.setQueryData(['me'], me);
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['me'] });
       confetti();
       setCur('');
       setNext('');
@@ -29,7 +29,7 @@ export function ChangePasswordForm({ onDone, compact = false, owner = false }: {
       className="flex flex-col gap-3"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!mismatch) act.mutate({ currentPassword: cur, newPassword: next });
+        if (!mismatch) act.mutate({ current: cur, next });
       }}
     >
       {!compact && (
@@ -47,14 +47,14 @@ export function ChangePasswordForm({ onDone, compact = false, owner = false }: {
       </div>
       <div>
         <label className="label" htmlFor="new">{t('pw.new')}</label>
-        <input id="new" type="password" className="input" autoComplete="new-password" minLength={4} value={next} onChange={(e) => setNext(e.target.value)} required />
+        <input id="new" type="password" className="input" autoComplete="new-password" minLength={6} value={next} onChange={(e) => setNext(e.target.value)} required />
       </div>
       <div>
         <label className="label" htmlFor="again">{t('pw.confirm')}</label>
         <input id="again" type="password" className="input" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} required />
         {mismatch && <p className="text-bad text-sm font-bold mt-1">{t('pw.mismatch')}</p>}
       </div>
-      <button className="btn-primary" disabled={act.isPending || mismatch || next.length < 4}>
+      <button className="btn-primary" disabled={act.isPending || mismatch || next.length < 6}>
         🔐 {t('pw.submit')}
       </button>
     </form>

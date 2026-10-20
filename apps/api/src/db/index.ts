@@ -7,9 +7,9 @@ import { sql } from 'drizzle-orm';
 import type { PgDatabase } from 'drizzle-orm/pg-core';
 import * as schema from './schema';
 import { MIGRATIONS } from './migrations.gen';
+import { GameError } from '../lib/errors';
 
 export { schema };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Db = PgDatabase<any, typeof schema>;
 
 let ready: Promise<Db> | null = null;
@@ -28,7 +28,7 @@ export function databaseUrl() {
 async function connect(): Promise<Db> {
   if (injected) return injected;
   const url = databaseUrl();
-  if (!url) throw new Error('DATABASE_URL is not set. Paste your Supabase connection string into the Netlify environment variables.');
+  if (!url) throw new GameError(503, 'no_database', 'The game has no database yet: set DATABASE_URL in Netlify (Site configuration > Environment variables) to your Supabase connection string, then redeploy.');
   const { default: postgres } = await import('postgres');
   const { drizzle } = await import('drizzle-orm/postgres-js');
   const client = postgres(url, { prepare: false, max: 3, idle_timeout: 20, connect_timeout: 10, onnotice: () => {} });

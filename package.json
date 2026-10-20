@@ -2,24 +2,21 @@
   "name": "digital-workforce",
   "version": "0.1.0",
   "private": true,
-  "description": "Digital Workforce - an invite-only cartoon office tycoon with a fictional Bits economy",
+  "description": "Digital Workforce Live - a player-run office economy for friends (Netlify + Supabase)",
   "workspaces": [
     "packages/*",
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm run migrate -w apps/server && concurrently -k -n server,web -c magenta,cyan \"npm run dev -w apps/server\" \"npm run dev -w apps/web\"",
-    "seed": "npm run seed -w apps/server",
-    "migrate": "npm run migrate -w apps/server",
+    "dev": "concurrently -k -n api,web -c magenta,cyan \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
     "build": "npm run build -w apps/web",
-    "start": "npm run start -w apps/server",
-    "play": "npm run build && npm run start",
-    "test": "npm run test -w apps/server",
+    "test": "npm run test -w apps/api",
     "test:e2e": "npm run test:e2e -w apps/web",
-    "typecheck": "tsc -p packages/shared --noEmit && tsc -p apps/server --noEmit && tsc -p apps/web --noEmit",
+    "typecheck": "tsc -p packages/shared --noEmit && tsc -p apps/api --noEmit && tsc -p apps/web --noEmit",
     "lint": "eslint .",
-    "simulate": "npm run simulate -w apps/server --",
-    "loadtest": "npm run loadtest -w apps/server --"
+    "db:generate": "npm run db:generate -w apps/api",
+    "start": "npm run start -w apps/api",
+    "play": "npm run build && npm run start"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

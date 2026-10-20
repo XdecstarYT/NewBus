@@ -1,20 +1,21 @@
-import { useEffect, type ReactNode } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { useMe, type Me } from './lib/hooks';
-import { GET, setViewAs } from './lib/api';
 import { Login } from './pages/Login';
 import { ChangePasswordPage } from './pages/ChangePassword';
 import { LoadingJoke, Toasts, Floaters, Confetti, ConfirmProvider } from './components/ui';
 import { BossByteBubble } from './components/BossByte';
 import { useStore } from './lib/store';
-import { connectWs, disconnectWs, onWs } from './lib/ws';
-import { setMusic, sfx } from './lib/sound';
-import { GameLayout, MeContext } from './pages/game/GameLayout';
-import { gameRoutes } from './pages/game/routes';
-import { OwnerLayout } from './pages/owner/OwnerLayout';
-import { ownerRoutes } from './pages/owner/routes';
-import { ModeratorHome } from './pages/ModeratorHome';
+import { setMusic } from './lib/sound';
+import { Layout } from './pages/Layout';
+import { Office } from './pages/play/Office';
+import { Market } from './pages/play/Market';
+import { MyShop } from './pages/play/Shop';
+import { Shops, Storefront, Pay } from './pages/play/Shops';
+import { Send, Team, Redeem, Settings } from './pages/play/Company';
+import { Chat, News, Leaderboard } from './pages/play/Social';
+import { Unions, UnionPage, TownHall, Court, CaseDetail } from './pages/play/Politics';
+import { OwnerOverview, OwnerCompanies, OwnerCompany, OwnerEconomy, OwnerJustice, OwnerCase, OwnerCodes } from './pages/owner/Owner';
 
 /** Apply accessibility / theme prefs to <html>. */
 function PrefsEffect() {
@@ -25,115 +26,76 @@ function PrefsEffect() {
     el.classList.toggle('reduce-motion', prefs.reducedMotion);
     el.classList.toggle('hc', prefs.highContrast);
     el.classList.toggle('cb', prefs.colorBlind);
-    for (const th of ['candy', 'ocean', 'retro', 'forest']) el.classList.toggle(`theme-${th}`, prefs.theme === th);
     el.style.setProperty('--font-scale', String(prefs.textSize));
   }, [prefs]);
   useEffect(() => setMusic(prefs.music && !prefs.muted), [prefs.music, prefs.muted]);
   return null;
 }
 
-/** Live socket wiring shared by every logged-in screen. */
-function LiveEffect() {
-  const qc = useQueryClient();
-  const say = useStore((s) => s.say);
-  const toast = useStore((s) => s.toast);
-  const confetti = useStore((s) => s.confetti);
-  useEffect(() => {
-    connectWs();
-    const offs = [
-      onWs('perms', () => {
-        qc.invalidateQueries({ queryKey: ['me'] });
-        qc.invalidateQueries({ queryKey: ['me-viewas'] });
-      }),
-      onWs('company', () => qc.invalidateQueries()),
-      onWs('logout', () => window.location.reload()),
-      onWs('boss', (m) => say(m.text, m.mood ?? 'wow')),
-      onWs('achievement', (m) => {
-        sfx.levelUp();
-        confetti();
-        toast(`Achievement unlocked: ${m.name}! New title "${m.title}"${m.reward ? ` (+${m.reward} BT)` : ''}`, 'good', m.emoji);
-        qc.invalidateQueries({ queryKey: ['achievements'] });
-      }),
-      onWs('chaos', (m) => {
-        if (m.kind === 'credit-rain') {
-          sfx.bigCoin();
-          confetti();
-        }
-        qc.invalidateQueries({ queryKey: ['state'] });
-      }),
-      onWs('broadcast', (m) => {
-        say(`📣 ${m.text}`, 'wow');
-        toast(m.text, 'info', '📣');
-      }),
-    ];
-    return () => {
-      offs.forEach((o) => o());
-      disconnectWs();
-    };
-  }, [qc, say, toast, confetti]);
-  return null;
-}
-
-function ViewAsGame({ children }: { children: ReactNode }) {
-  const { companyId } = useParams();
-  setViewAs(companyId ?? null);
-  useEffect(() => () => setViewAs(null), []);
-  const q = useQuery<Me>({ queryKey: ['me-viewas', companyId], queryFn: () => GET<Me>('/auth/me'), staleTime: 10_000 });
-  if (!q.data) return <LoadingJoke />;
-  return <MeContext.Provider value={q.data}>{children}</MeContext.Provider>;
-}
-
 function Shell() {
-  const me = useMe();
-  if (me.isLoading) return <LoadingJoke />;
-  if (me.error || !me.data) return <Login />;
-  const data = me.data;
-  if (data.account.mustChangePassword) return <ChangePasswordPage owner={data.account.role === 'OWNER'} />;
-  const role = data.account.role;
-  const home = role === 'OWNER' ? '/owner' : role === 'MODERATOR' ? '/mod' : '/office';
+  const q = useMe();
+  if (q.isLoading) return <LoadingJoke />;
+  const me = q.data as Me | undefined;
+  if (q.error && q.error.status !== 401 && !me) return <ServerDown message={q.error.message} />;
+  if (!me?.account) return <Login />;
+  if (me.account.mustChangePassword) return <ChangePasswordPage owner={me.account.role === 'OWNER'} />;
+  const owner = me.account.role === 'OWNER';
+  const home = me.company ? '/office' : '/owner';
   return (
-    <>
-      <LiveEffect />
-      <Routes>
-        {role === 'OWNER' && (
+    <Routes>
+      <Route element={<Layout me={me} />}>
+        {me.company && (
           <>
-            <Route path="/owner" element={<OwnerLayout />}>
-              {ownerRoutes.map((r) => (
-                <Route key={r.path} index={r.path === ''} path={r.path || undefined} element={r.element} />
-              ))}
-            </Route>
-            <Route
-              path="/viewas/:companyId"
-              element={
-                <ViewAsGame>
-                  <GameLayout />
-                </ViewAsGame>
-              }
-            >
-              {gameRoutes.map((r) => (
-                <Route key={r.path} path={r.path.replace(/^\//, '')} element={r.element} />
-              ))}
-              <Route index element={<Navigate to="office" replace />} />
-            </Route>
+            <Route path="/office" element={<Office />} />
+            <Route path="/market" element={<Market />} />
+            <Route path="/market/:item" element={<Market />} />
+            <Route path="/shop" element={<MyShop />} />
+            <Route path="/shops" element={<Shops />} />
+            <Route path="/shops/:id" element={<Storefront />} />
+            <Route path="/pay" element={<Pay />} />
+            <Route path="/pay/:code" element={<Pay />} />
+            <Route path="/send" element={<Send />} />
+            <Route path="/team" element={<Team />} />
+            <Route path="/redeem" element={<Redeem />} />
+            <Route path="/redeem/:code" element={<Redeem />} />
+            <Route path="/unions" element={<Unions />} />
+            <Route path="/unions/:id" element={<UnionPage />} />
+            <Route path="/townhall" element={<TownHall />} />
+            <Route path="/court" element={<Court />} />
+            <Route path="/court/:id" element={<CaseDetail />} />
           </>
         )}
-        {role === 'MODERATOR' && <Route path="/mod/*" element={<ModeratorHome />} />}
-        {(role === 'COMPANY_ADMIN' || role === 'STAFF' || (role === 'OWNER' && data.access.companyId)) && (
-          <Route
-            element={
-              <MeContext.Provider value={data}>
-                <GameLayout />
-              </MeContext.Provider>
-            }
-          >
-            {gameRoutes.map((r) => (
-              <Route key={r.path} path={r.path} element={r.element} />
-            ))}
-          </Route>
+        {owner && (
+          <>
+            <Route path="/owner" element={<OwnerOverview />} />
+            <Route path="/owner/companies" element={<OwnerCompanies />} />
+            <Route path="/owner/companies/:id" element={<OwnerCompany />} />
+            <Route path="/owner/economy" element={<OwnerEconomy />} />
+            <Route path="/owner/justice" element={<OwnerJustice />} />
+            <Route path="/owner/justice/cases/:id" element={<OwnerCase />} />
+            <Route path="/owner/codes" element={<OwnerCodes />} />
+          </>
         )}
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/news" element={<News />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to={home} replace />} />
-      </Routes>
-    </>
+      </Route>
+    </Routes>
+  );
+}
+
+function ServerDown({ message }: { message: string }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 office-floor">
+      <div className="card max-w-md text-center flex flex-col gap-2">
+        <div className="text-5xl">🔌</div>
+        <h1 className="h2">Can't reach the game</h1>
+        <p className="text-sm">{message}</p>
+        <button className="btn-primary" onClick={() => window.location.reload()}>Try again</button>
+      </div>
+    </div>
   );
 }
 

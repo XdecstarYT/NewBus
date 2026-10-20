@@ -4,16 +4,14 @@ import { useStore } from './store';
 import { sfx } from './sound';
 
 export interface Me {
-  account: { id: string; accountNumber: string; displayName: string; role: string; jobTitle: string | null; mustChangePassword: boolean; tutorialDone: boolean; totpEnabled: boolean; settings: Record<string, unknown> };
-  access: { companyId: string | null; modules: Record<string, boolean>; limits: any; readOnly: boolean; viewAs: boolean; moderatorTools: string[] };
-  company: { id: string; name: string; emoji: string; color: string; slogan: string; industryId: string; industryName: string; industryEmoji: string; level: number; status: string } | null;
-  flags: Record<string, boolean>;
-  announcement: string | null;
-  tickMs: number;
+  account: { id: string; number: string; name: string; role: 'OWNER' | 'ADMIN' | 'STAFF'; mustChangePassword: boolean; xp: number };
+  company: { id: string; name: string; emoji: string; color: string; slogan: string; industry: string; status: string; prestige: number; installs: Record<string, number>; toolUses: number; xp: number; level: number; balance: number } | null;
+  energy: { now: number; max: number; regen: number };
+  unread: number;
 }
 
 export function useMe() {
-  return useQuery<Me, ApiError>({ queryKey: ['me'], queryFn: () => GET<Me>('/auth/me'), retry: false, staleTime: 30_000 });
+  return useQuery<Me | { account: null; company: null }, ApiError>({ queryKey: ['me'], queryFn: () => GET('/auth/me'), retry: false, staleTime: 15_000, refetchInterval: 30_000 });
 }
 
 /** GET query helper. */

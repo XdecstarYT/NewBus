@@ -5,7 +5,7 @@ LANGUAGE plpgsql AS $$
 BEGIN
   BEGIN
     PERFORM realtime.send(payload, 'hint', topic, false);
-  EXCEPTION WHEN undefined_function OR invalid_schema_name THEN
+  EXCEPTION WHEN OTHERS THEN -- a missed hint must never undo a game action
     NULL;
   END;
 END;
