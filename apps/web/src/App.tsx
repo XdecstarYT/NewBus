@@ -92,7 +92,10 @@ function ServerDown({ message }: { message: string }) {
       <div className="card max-w-md text-center flex flex-col gap-2">
         <div className="text-5xl">🔌</div>
         <h1 className="h2">Can't reach the game</h1>
-        <p className="text-sm">{message}</p>
+        <p className="text-sm font-bold" data-testid="server-problem">{message}</p>
+        <p className="text-xs muted">
+          Owner: open <a className="underline" href="/api/health" target="_blank" rel="noreferrer">/api/health</a> on this site to see what is wrong. If that page shows "Page not found", Netlify did not deploy the game's API (check the deploy log and that the site builds this branch).
+        </p>
         <button className="btn-primary" onClick={() => window.location.reload()}>Try again</button>
       </div>
     </div>

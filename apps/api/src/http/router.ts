@@ -3,9 +3,9 @@
  * Netlify Function and in the local dev server. Handles sessions, CSRF,
  * JSON bodies and errors.
  */
-import { and, eq, gt } from 'drizzle-orm';
+import { and, eq, gt, sql } from 'drizzle-orm';
 import type { ZodSchema, z } from 'zod';
-import { getDb, schema, type Db } from '../db';
+import { databaseUrl, getDb, schema, type Db } from '../db';
 import { GameError, badRequest, forbidden, unauthorized } from '../lib/errors';
 import { clock, MINUTE } from '../lib/time';
 import { sha256, token } from '../lib/ids';
@@ -122,8 +122,40 @@ function apiPath(pathname: string) {
   return pathname.replace(/^\/\.netlify\/functions\/api/, '').replace(/^\/api/, '') || '/';
 }
 
+/** Turn a database connection failure into advice the Owner can act on. */
+export function explainDbError(e: unknown): string | null {
+  const err = e as { code?: string; message?: string };
+  const msg = String(err?.message ?? '');
+  const code = String(err?.code ?? '');
+  if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') return 'The database address in DATABASE_URL does not exist. Copy it again from Supabase → Connect → Transaction pooler.';
+  if (code === 'ECONNREFUSED' || code === 'ETIMEDOUT' || code === 'CONNECT_TIMEOUT' || /timeout/i.test(msg)) return 'Could not connect to the database in time. Check DATABASE_URL uses the Transaction pooler address (port 6543) and that the Supabase project is not paused.';
+  if (code === '28P01' || /password authentication failed/i.test(msg)) return 'The database password in DATABASE_URL is wrong. Put your Supabase database password in place of [YOUR-PASSWORD] (no brackets). Reset it in Supabase → Project Settings → Database if you forgot it.';
+  if (/tenant or user not found/i.test(msg)) return 'Supabase does not recognise the user in DATABASE_URL. Copy the whole Transaction pooler string again (the user looks like postgres.rkrxszigtrjmboesxvhn).';
+  if (/invalid url|invalid connection|getaddrinfo/i.test(msg)) return 'DATABASE_URL is not a valid connection string. It should start with postgresql:// and come from Supabase → Connect → Transaction pooler.';
+  if (/ssl|certificate/i.test(msg)) return `Database SSL problem: ${msg}`;
+  if (code.startsWith('08') || /connection/i.test(msg)) return `Could not connect to the database: ${msg}`;
+  return null;
+}
+
+/** /api/health: is the API running, is DATABASE_URL set, can we reach the database? */
+async function health(): Promise<Response> {
+  const out: Record<string, unknown> = { api: 'running', databaseUrlSet: !!databaseUrl(), time: new Date().toISOString() };
+  try {
+    const db = await getDb();
+    await db.execute(sql`SELECT 1`);
+    out.database = 'connected';
+    out.ok = true;
+  } catch (e) {
+    out.ok = false;
+    out.database = 'error';
+    out.problem = e instanceof GameError ? e.message : explainDbError(e) ?? String((e as Error)?.message ?? e);
+  }
+  return new Response(JSON.stringify(out, null, 2), { status: out.ok ? 200 : 503, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
+}
+
 export async function handle(req: Request, ip: string | null = null): Promise<Response> {
   const url = new URL(req.url);
+  if (apiPath(url.pathname) === '/health') return health();
   const https = url.protocol === 'https:' || req.headers.get('x-forwarded-proto') === 'https';
   const c: Ctx = { req, url, params: {}, query: url.searchParams, body: undefined, ip, db: null as unknown as Db, https, cookies: parseCookies(req.headers.get('cookie')), setCookies: [], account: null, company: null };
   try {
@@ -173,6 +205,8 @@ export async function handle(req: Request, ip: string | null = null): Promise<Re
   } catch (e) {
     if (e instanceof GameError) return json(e.status, { error: e.code, message: e.message, ...e.extra }, c.setCookies);
     console.error('api error', e);
+    const db = explainDbError(e);
+    if (db) return json(503, { error: 'database', message: db }, c.setCookies);
     return json(500, { error: 'server_error', message: 'Something caught fire in the server room. 🔥' }, c.setCookies);
   }
 }

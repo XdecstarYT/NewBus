@@ -26,7 +26,10 @@ Optional settings in Netlify:
 - `OWNER_PASSWORD`: a different first-login password for the Owner.
 - `OWNER_RESET_PASSWORD=true`: for one deploy, if you ever get locked out.
 
-**If the login says "Can't reach the game"**, the API isn't running. Check that the deploy finished and that `DATABASE_URL` is set and has your real password in it.
+**If it says "Can't reach the game"**, open `https://<your-site>.netlify.app/api/health`:
+- `"database": "connected"`: all good. Reload the game.
+- `"problem": "..."`: it tells you exactly what to fix (missing `DATABASE_URL`, wrong password, wrong address).
+- A Netlify "Page not found": the API function wasn't deployed. Check the deploy log, and that Netlify builds the branch with `netlify.toml` and the `netlify/functions` folder (Base directory must be empty, not `apps/web`).
 
 ## Play on your computer (no setup)
 

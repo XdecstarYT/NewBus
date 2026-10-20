@@ -1,5 +1,6 @@
 /** Accounts, logins, sessions, companies and staff. */
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'node:crypto';
 import { and, eq, sql } from 'drizzle-orm';
 import { isFacility, type FacilityId } from '@dw/shared/live';
 import { schema, type Db } from '../db';
@@ -12,9 +13,13 @@ import { addNews, audit, getSettings, notify } from './core';
 import { pay, W } from './money';
 import { addItem } from './stock';
 
+// Bundled as ESM (Netlify), bcryptjs can't require('crypto') itself, so hand it Node's generator.
+bcrypt.setRandomFallback((n: number) => Array.from(randomBytes(n)));
+
 const ROUNDS = 10;
 export const hashPassword = (pw: string) => bcrypt.hashSync(pw, ROUNDS);
-const DUMMY = bcrypt.hashSync('not-a-real-password', ROUNDS);
+let dummy: string | null = null;
+const DUMMY = () => (dummy ??= hashPassword('not-a-real-password'));
 
 const WORDS = ['otter', 'pickle', 'rocket', 'waffle', 'cactus', 'banjo', 'noodle', 'comet', 'mango', 'turbo', 'pebble', 'zebra'];
 export function tempPassword() {
@@ -55,7 +60,7 @@ export async function login(c: Ctx, number: string, password: string) {
   const r = await c.db.select().from(schema.accounts).where(eq(schema.accounts.number, normalizeNumber(number))).limit(1);
   const acc = r[0];
   if (!acc) {
-    bcrypt.compareSync(password, DUMMY); // same timing either way
+    bcrypt.compareSync(password, DUMMY()); // same timing either way
     throw new GameError(401, 'bad_login', 'That account number and password do not match.');
   }
   if (acc.lockedUntil && acc.lockedUntil > now) throw new GameError(429, 'locked', `Too many wrong passwords. Try again in ${Math.ceil((acc.lockedUntil - now) / MINUTE)} min.`);

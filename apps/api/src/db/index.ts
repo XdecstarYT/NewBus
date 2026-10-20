@@ -31,7 +31,9 @@ async function connect(): Promise<Db> {
   if (!url) throw new GameError(503, 'no_database', 'The game has no database yet: set DATABASE_URL in Netlify (Site configuration > Environment variables) to your Supabase connection string, then redeploy.');
   const { default: postgres } = await import('postgres');
   const { drizzle } = await import('drizzle-orm/postgres-js');
-  const client = postgres(url, { prepare: false, max: 3, idle_timeout: 20, connect_timeout: 10, onnotice: () => {} });
+  const local = /@(localhost|127\.0\.0\.1)[:/]/.test(url) || /sslmode=disable/.test(url);
+  // Supabase wants SSL; 'require' encrypts without needing their certificate chain installed.
+  const client = postgres(url, { prepare: false, max: 3, idle_timeout: 20, connect_timeout: 10, ssl: local ? false : 'require', onnotice: () => {} });
   return drizzle(client, { schema }) as unknown as Db;
 }
 
