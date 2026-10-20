@@ -66,7 +66,7 @@ let n = 0;
 export async function makeCompany(db: Db, industry: string, opts: { grant?: number; name?: string } = {}) {
   n++;
   const owner = (await db.select().from(schema.accounts).where(eq(schema.accounts.role, 'OWNER')))[0];
-  const number = String(100 + n + Math.floor(Math.random() * 800));
+  const number = `t${n}`;
   const r = await createCompany(db, owner.id, { name: opts.name ?? `Test Co ${n} ${number}`, emoji: '🧪', color: '#123456', industry, adminName: 'Boss', number, password: 'pass1234', grant: opts.grant });
   return { id: r.id, client: await loginAs(number, 'pass1234') };
 }
