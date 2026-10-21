@@ -218,7 +218,7 @@ function AiMaker({ on, onDraft }: { on: boolean; onDraft: (t: any) => void }) {
     onSuccess: (r) => onDraft(r.draft),
   });
   const ideas = ['Reconcile a week of café receipts', 'Write a polite reply to a customer whose parcel is late', 'Sort 10 support tickets by urgency', 'Calculate staff overtime from a timesheet', 'Name a new energy drink and write its tagline'];
-  if (!on) return <EmptyState emoji="🔌" title="The AI is off" body="Add your Claude key as AIK in Netlify (Site settings → Environment variables), redeploy, and keep AI switched on in the 🤖 AI page." />;
+  if (!on) return <EmptyState emoji="🔌" title="The AI is off" body="Add your AI key (Groq or Claude) as AIK in Netlify (Site settings → Environment variables), redeploy, and keep AI switched on in the 🤖 AI page." />;
   return (
     <form className="card flex flex-col gap-2 max-w-2xl" onSubmit={(e) => (e.preventDefault(), make.mutate(undefined))}>
       <div className="h3">🤖 Describe a job, the AI builds the template</div>
@@ -301,9 +301,9 @@ export function OwnerAI() {
       <Requests />
       <div className={`card flex flex-col gap-2 ${a.on ? '!bg-emerald-50' : '!bg-amber-50'}`}>
         <div className="h3">{a.on ? '🟢 The AI is on' : a.configured ? '🟡 Key found, but AI is switched off' : '🔴 No AI key yet'}</div>
-        {!a.configured && <p className="text-sm">Add your Claude API key in Netlify: <b>Site configuration → Environment variables → AIK</b>, then redeploy. Everything still works without it: built-in customers and clients, and written work goes to you to grade.</p>}
-        {a.configured && !a.looksLikeClaudeKey && <p className="text-sm">⚠️ The AIK value does not look like a Claude key (they start with <code>sk-ant-</code>).</p>}
-        <div className="text-sm">Model: <code>{a.model}</code> · calls since the server woke up: {a.calls} · failures: {a.failures}</div>
+        {!a.configured && <p className="text-sm">Add your AI key (Groq <code>gsk_...</code> or Claude <code>sk-ant-...</code>) in Netlify: <b>Site configuration → Environment variables → AIK</b>, then redeploy. Everything still works without it: built-in customers and clients, and written work goes to you to grade.</p>}
+        {a.configured && !a.keyLooksRight && <p className="text-sm">⚠️ The AIK value does not look like a Groq key (<code>gsk_...</code>) or a Claude key (<code>sk-ant-...</code>). Check for extra spaces or a missing part.</p>}
+        <div className="text-sm">Provider: <b>{a.provider === 'groq' ? 'Groq' : 'Claude'}</b> · model: <code>{a.model}</code> · calls since the server woke up: {a.calls} · failures: {a.failures}</div>
         {a.lastError && <div className="text-xs text-rose-700">Last problem: {a.lastError}</div>}
         <div className="flex flex-wrap gap-2">
           <button className="btn-primary btn-sm" disabled={!a.configured || test.isPending} onClick={() => test.mutate(undefined)} data-testid="ai-test">{test.isPending ? 'Asking...' : '👋 Test the AI'}</button>
