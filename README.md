@@ -30,7 +30,7 @@ Netlify hosts the pages and runs the game's API as serverless functions. Supabas
 3. **Deploy this branch.** Netlify reads `netlify.toml` from the repo: it builds the pages, publishes the API at `/api`, and runs a small job every 10 minutes that closes elections and court hearings. Use **Deploys → Trigger deploy → Clear cache and deploy site**. Make sure Netlify builds the branch that has this code (Site configuration → Build & deploy → Branches).
 4. **Open your Netlify address** and log in with `01` / `Diddy`. The game creates its tables on the first visit (they are already set up in your Supabase project).
 
-**Turn on the AI:** in Netlify, add an environment variable `AIK` with your AI key, then redeploy. A **Groq** key (starts with `gsk_`) uses Groq, and the game picks the best chat model your key can use (and switches by itself if Groq retires one); a **Claude** key (starts with `sk-ant-`) uses Claude. Check it under 👑 **AI** → *Test the AI*. Without a key the game still works: customers and clients use built-in characters, and written office work goes to you to grade. Optional: `AIK_MODEL` picks a different model from the same provider.
+**Turn on the AI:** in Netlify, add an environment variable `AIK` with your AI key, then redeploy. A **Groq** key (starts with `gsk_`) uses Groq's `openai/gpt-oss-120b`; a **Claude** key (starts with `sk-ant-`) uses Claude. Check it under 👑 **AI** → *Test the AI*. Without a key the game still works: customers and clients use built-in characters, and written office work goes to you to grade. Optional: `AIK_MODEL` picks a different model from the same provider.
 
 Optional settings in Netlify:
 - `OWNER_PASSWORD`: a different first-login password for the Owner.

@@ -303,9 +303,8 @@ export function OwnerAI() {
         <div className="h3">{a.on ? '🟢 The AI is on' : a.configured ? '🟡 Key found, but AI is switched off' : '🔴 No AI key yet'}</div>
         {!a.configured && <p className="text-sm">Add your AI key (Groq <code>gsk_...</code> or Claude <code>sk-ant-...</code>) in Netlify: <b>Site configuration → Environment variables → AIK</b>, then redeploy. Everything still works without it: built-in customers and clients, and written work goes to you to grade.</p>}
         {a.configured && !a.keyLooksRight && <p className="text-sm">⚠️ The AIK value does not look like a Groq key (<code>gsk_...</code>) or a Claude key (<code>sk-ant-...</code>). Check for extra spaces or a missing part.</p>}
-        <div className="text-sm">Provider: <b>{a.provider === 'groq' ? 'Groq' : 'Claude'}</b> · model: <code>{a.model === 'auto' ? 'picked on first use' : a.model}</code> · calls since the server woke up: {a.calls} · failures: {a.failures}</div>
+        <div className="text-sm">Provider: <b>{a.provider === 'groq' ? 'Groq' : 'Claude'}</b> · model: <code>{a.model}</code> · calls since the server woke up: {a.calls} · failures: {a.failures}</div>
         {a.lastError && <div className="text-xs text-rose-700">Last problem: {a.lastError}</div>}
-        {a.provider === 'groq' && a.models?.length > 0 && <div className="text-xs muted">Groq models your key can use: {a.models.join(', ')}. The game picks the best one by itself (or set AIK_MODEL in Netlify).</div>}
         <div className="flex flex-wrap gap-2">
           <button className="btn-primary btn-sm" disabled={!a.configured || test.isPending} onClick={() => test.mutate(undefined)} data-testid="ai-test">{test.isPending ? 'Asking...' : '👋 Test the AI'}</button>
           <button className="btn-ghost btn-sm" onClick={() => summon.mutate(undefined)}>🧑‍💼 Bring in customers now</button>
