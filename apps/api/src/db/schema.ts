@@ -573,3 +573,25 @@ export const quests = live.table(
   },
   (t) => [primaryKey({ columns: [t.accountId, t.day, t.questId] })],
 );
+
+// ---------------------------------------------------------------- Owner requests
+/** The Owner asks a company for Bits or goods; the company pays or declines. */
+export const ownerRequests = live.table(
+  'owner_requests',
+  {
+    id: text('id').primaryKey(),
+    companyId: text('company_id').notNull(),
+    kind: text('kind').notNull(), // bits | items
+    amount: integer('amount').notNull().default(0),
+    item: text('item'),
+    qty: integer('qty').notNull().default(0),
+    title: text('title').notNull(),
+    message: text('message').notNull().default(''),
+    status: text('status').notNull(), // pending | paid | declined | expired | cancelled
+    aiWritten: boolean('ai_written').notNull().default(false),
+    createdAt: ms('created_at').notNull(),
+    dueAt: ms('due_at').notNull(),
+    doneAt: ms('done_at'),
+  },
+  (t) => [index('owner_requests_company_idx').on(t.companyId, t.status), index('owner_requests_status_idx').on(t.status)],
+);

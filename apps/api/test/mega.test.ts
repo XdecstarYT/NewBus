@@ -24,10 +24,20 @@ beforeAll(async () => {
     if (system.includes('design office-work tasks'))
       return {
         category: 'sheets', title: 'Sum the till', emoji: '🧮', brief: 'Add up the sales.', reference: 'Mon 10\nTue 15\nWed 5',
-        fields: [{ key: 'Total Sales', label: 'Total', type: 'number', options: [] }], grading: 'auto', answers: [{ key: 'total-sales', value: '30' }], rubric: '', difficulty: 1,
+        fields: [{ key: 'Total Sales', label: 'Total', type: 'number', options: [] }], grading: 'auto', answers: [{ key: 'total-sales', value: '30' }], rubric: '', difficulty: 1, clientName: 'Mr. Till', clientEmoji: '🧾', clientNote: 'Count carefully!',
       } as never;
     if (system.includes('A seller asks you to pay more')) return { accept: true, raisePct: 20, reply: 'You charmed me!' } as never;
     if (system.includes('walk-in customers')) return { customers: Array.from({ length: 10 }, (_, i) => ({ name: `Shopper ${i}`, emoji: '🛍️', persona: 'loves bread', message: 'Bread please!' })) } as never;
+    if (system.includes('assistant of the Owner')) {
+      const target = /<instruction>.*?(co_\w+)/s.exec(prompt)?.[1] ?? 'all';
+      return {
+        summary: 'Asking for road money.',
+        actions: [
+          { kind: 'request_bits', target, amount: 150, item: '', qty: 0, title: 'Road repair fund', message: 'Pay up for the potholes!', dueHours: 12, templateId: '' },
+          { kind: 'news', target: 'all', amount: 0, item: '', qty: 0, title: 'Roads are getting fixed', message: '', dueHours: 0, templateId: '' },
+        ],
+      } as never;
+    }
     if (system.includes('business clients')) return { name: 'Ms. Ledger', emoji: '📒', note: 'Numbers, please!' } as never;
     return { hello: 'hi' } as never;
   });
@@ -141,7 +151,7 @@ describe('AI customers', () => {
     const p = await makeCompany(db, 'bakery');
     const list = (await p.client.get('/game/customers')).body;
     expect(list.open.length).toBeGreaterThan(0);
-    const o = list.open[0];
+    const o = list.open.find((x: any) => x.aiWritten);
     expect(o.name).toMatch(/Shopper/);
     for (const l of o.lines) await addItem(db, p.id, l.item, l.qty);
     const h = await p.client.post(`/game/customers/${o.id}/haggle`, { pitch: 'Freshest in town, baked at dawn!' });
@@ -207,5 +217,57 @@ describe('quests, skills and badges', () => {
     const notDone = after.quests.find((x: any) => x.progress < x.target);
     if (notDone) expect((await p.client.post(`/game/quests/${notDone.questId}/claim`)).status).toBe(400);
     expect((await ledgerCheck(db)).sum).toBe(0);
+  });
+});
+
+describe('Owner AI tools', () => {
+  it('sends an AI client with a brand-new job to one company', async () => {
+    const p = await makeCompany(db, 'farm');
+    const other = await makeCompany(db, 'farm');
+    const r = await owner.post('/owner/ai/client', { companyId: p.id, idea: 'adding up a till roll', reward: 90 });
+    expect(r.status).toBe(200);
+    expect(r.body.client.name).toBe('Mr. Till');
+    const mine = (await p.client.get('/game/work-board')).body.jobs.find((j: any) => j.id === r.body.id);
+    expect(mine.clientNote).toBe('Count carefully!');
+    expect(mine.reward).toBe(90);
+    expect((await other.client.get('/game/work-board')).body.jobs.find((j: any) => j.id === r.body.id)).toBeUndefined();
+    const quick = await owner.post('/owner/ai/client', { companyId: p.id });
+    expect(quick.status).toBe(200);
+  });
+
+  it('turns "request x Bits" into actions the Owner sends; the company pays or declines', async () => {
+    const a = await makeCompany(db, 'farm', { grant: 1000 });
+    const b = await makeCompany(db, 'farm', { grant: 1000 });
+    const plan = await owner.post('/owner/ai/plan', { instruction: `request 150 bits from ${a.id} for road repairs` });
+    expect(plan.status).toBe(200);
+    expect(plan.body.actions[0]).toMatchObject({ kind: 'request_bits', target: a.id, amount: 150 });
+    // the Owner edits the plan before sending: also ask company b
+    const actions = [...plan.body.actions, { ...plan.body.actions[0], target: b.id }];
+    const ran = await owner.post('/owner/ai/run', { actions });
+    expect(ran.status).toBe(200);
+    const ra = (await a.client.get('/game/requests')).body[0];
+    expect(ra.title).toBe('Road repair fund');
+    expect((await a.client.post(`/game/requests/${ra.id}/pay`)).status).toBe(200);
+    expect(await balanceOf(a.client)).toBe(850);
+    expect((await a.client.post(`/game/requests/${ra.id}/pay`)).status).toBe(409);
+    const rb = (await b.client.get('/game/requests')).body[0];
+    expect((await b.client.post(`/game/requests/${rb.id}/decline`)).status).toBe(200);
+    expect(await balanceOf(b.client)).toBe(1000);
+    const all = (await owner.get('/owner/requests')).body;
+    expect(all.filter((r: any) => r.title === 'Road repair fund').map((r: any) => r.status).sort()).toEqual(['declined', 'paid']);
+    expect((await ledgerCheck(db)).sum).toBe(0);
+  });
+
+  it('a game day passes every 2 real hours: quests reset and requests run out on game time', async () => {
+    const p = await makeCompany(db, 'farm');
+    await owner.post('/owner/ai/run', { actions: [{ kind: 'request_bits', target: p.id, amount: 10, title: 'Quick one', dueHours: 12 }] });
+    const q1 = (await p.client.get('/game/quests')).body.quests.map((x: any) => x.day)[0];
+    clock.advance(2 * HOUR);
+    await sweep(db, true);
+    const q2 = (await p.client.get('/game/quests')).body.quests.map((x: any) => x.day)[0];
+    expect(q2).not.toBe(q1);
+    const req = (await p.client.get('/game/requests')).body.find((r: any) => r.title === 'Quick one');
+    expect(req.status).toBe('expired'); // 12 game hours = 1 real hour
+    clock.reset();
   });
 });

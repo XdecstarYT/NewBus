@@ -5,10 +5,10 @@
  */
 import * as z from 'zod/v4';
 import { and, desc, eq, gt, lt, sql } from 'drizzle-orm';
-import { CLIENT_NAMES, ITEMS, ITEM_IDS, type ItemId } from '@dw/shared/live';
+import { CLIENT_NAMES, ITEMS, ITEM_IDS, type ItemId, GAME_HOUR } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import type { Account, Company } from '../http/router';
-import { clock, HOUR } from '../lib/time';
+import { clock } from '../lib/time';
 import { newId } from '../lib/ids';
 import { badRequest, conflict, notFound } from '../lib/errors';
 import { addNews, assertAllowed, getSettings, hint, topics } from './core';
@@ -19,7 +19,7 @@ import { bumpQuest } from './progress';
 import { aiAvailable, aiJson } from './ai';
 
 const WANTED = ITEM_IDS.filter((i) => ITEMS[i].tier !== 'raw');
-const LIFETIME = 3 * HOUR;
+const LIFETIME = 12 * GAME_HOUR;
 
 function randomLines() {
   const n = 1 + Math.floor(Math.random() * 3);
@@ -91,7 +91,7 @@ export async function sweepCustomers(db: Db, now: number, allowAi: boolean) {
       haggledBy: [],
       aiWritten: !!p,
       createdAt: now,
-      expiresAt: now + LIFETIME + Math.floor(Math.random() * HOUR),
+      expiresAt: now + LIFETIME + Math.floor(Math.random() * 6 * GAME_HOUR),
     });
   }
   await hint(db, topics.all, { t: 'customers' });

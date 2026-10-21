@@ -4,11 +4,11 @@
  * (asset freezes, feature suspensions).
  */
 import { and, desc, eq, gt, inArray, isNull, like, or, sql } from 'drizzle-orm';
-import { CASE_KINDS, EVIDENCE_KINDS, FEATURES, type CaseKind, type EvidenceKind, type Feature } from '@dw/shared/live';
+import { CASE_KINDS, EVIDENCE_KINDS, FEATURES, type CaseKind, type EvidenceKind, type Feature, GAME_HOUR, GAME_MINUTE } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import type { Remedy } from '../db/schema';
 import type { Account, Company } from '../http/router';
-import { clock, DAY, HOUR, MINUTE } from '../lib/time';
+import { clock, DAY } from '../lib/time';
 import { newId } from '../lib/ids';
 import { badRequest, conflict, forbidden, notFound } from '../lib/errors';
 import { addNews, getSettings, hint, notify, topics } from './core';
@@ -26,7 +26,7 @@ async function co(db: Db, id: string | null) {
 export async function addSanction(db: Db, companyId: string, kind: 'freeze' | 'suspend', hours: number, reason: string, feature: string | null = null) {
   if (kind === 'suspend' && (!feature || !(feature in FEATURES))) throw badRequest('Pick a feature to suspend.');
   const now = clock.now();
-  const row = { id: newId('snc', 12), companyId, kind, feature: kind === 'suspend' ? feature : null, reason: reason.slice(0, 200), until: now + Math.max(1, Math.min(720, hours)) * HOUR, liftedAt: null, createdAt: now };
+  const row = { id: newId('snc', 12), companyId, kind, feature: kind === 'suspend' ? feature : null, reason: reason.slice(0, 200), until: now + Math.max(1, Math.min(720, hours)) * GAME_HOUR, liftedAt: null, createdAt: now };
   await db.insert(schema.sanctions).values(row);
   await notify(db, { companyId }, 'justice', kind === 'freeze' ? '🧊 Your assets are frozen' : `⛔ ${FEATURES[feature as Feature].label} suspended`, `${reason} (${Math.round(hours)} h)`);
   return row;
@@ -141,7 +141,7 @@ export async function fileCase(db: Db, plaintiff: Company | null, actorId: strin
   if (fee) await pay(db, W.company(plaintiff!.id), W.treasury, fee, 'court.filing', `Filing fee: ${o.title}`, actorId);
   const now = clock.now();
   const number = Number((await db.select({ n: sql<string>`coalesce(max(${schema.cases.number}),0)` }).from(schema.cases))[0].n) + 1;
-  const row: Case = { id: newId('case', 12), number, kind: o.kind, title: o.title.slice(0, 120), plaintiffId: plaintiff?.id ?? null, defendantId: o.defendantId, claim, fee, status: 'filed', hearingAt: now + s.hearingMinutes * MINUTE, verdict: null, remedy: null, reasoning: null, appealed: false, appealDeadline: null, settleOffer: null, settleFrom: null, createdAt: now, closedAt: null };
+  const row: Case = { id: newId('case', 12), number, kind: o.kind, title: o.title.slice(0, 120), plaintiffId: plaintiff?.id ?? null, defendantId: o.defendantId, claim, fee, status: 'filed', hearingAt: now + s.hearingMinutes * GAME_MINUTE, verdict: null, remedy: null, reasoning: null, appealed: false, appealDeadline: null, settleOffer: null, settleFrom: null, createdAt: now, closedAt: null };
   await db.insert(schema.cases).values(row);
   const p = await co(db, row.plaintiffId);
   await addNews(db, 'justice', `⚖️ Case #${number}: ${p.name} v. ${def.name}`, `${CASE_KINDS[o.kind as CaseKind].emoji} ${CASE_KINDS[o.kind as CaseKind].label}. Claim: ${claim} BT.`, o.defendantId);
@@ -229,7 +229,7 @@ export async function decide(db: Db, caseId: string, verdict: 'plaintiff' | 'def
   const rem = verdict === 'plaintiff' ? cleanRemedy(remedy) : {};
   const final = c.appealed;
   const now = clock.now();
-  await db.update(schema.cases).set({ status: final ? 'closed' : 'decided', verdict, remedy: rem, reasoning: reasoning.slice(0, 500), appealDeadline: final ? null : now + s.appealHours * HOUR }).where(eq(schema.cases.id, caseId));
+  await db.update(schema.cases).set({ status: final ? 'closed' : 'decided', verdict, remedy: rem, reasoning: reasoning.slice(0, 500), appealDeadline: final ? null : now + s.appealHours * GAME_HOUR }).where(eq(schema.cases.id, caseId));
   const w = await co(db, verdict === 'plaintiff' ? c.plaintiffId : c.defendantId);
   await tellParties(db, c, `🔨 Verdict in case #${c.number}: ${w.name} wins`, final ? 'This ruling is final.' : `The loser can appeal within ${s.appealHours} h.`);
   if (final) await applyRemedy(db, { ...c, verdict, remedy: rem });
@@ -268,7 +268,7 @@ export async function appeal(db: Db, caseId: string, account: Account, company: 
   const fee = Math.max(100, c.fee * 2);
   await pay(db, W.company(company.id), W.treasury, fee, 'court.appeal', `Appeal of case #${c.number}`, account.id);
   const s = await getSettings(db);
-  await db.update(schema.cases).set({ status: 'appealed', appealed: true, hearingAt: clock.now() + s.hearingMinutes * MINUTE, appealDeadline: null }).where(eq(schema.cases.id, caseId));
+  await db.update(schema.cases).set({ status: 'appealed', appealed: true, hearingAt: clock.now() + s.hearingMinutes * GAME_MINUTE, appealDeadline: null }).where(eq(schema.cases.id, caseId));
   await tellParties(db, c, `📣 Case #${c.number} appealed`, 'The appeals court will hear it. Add more evidence!');
   return { ok: true, fee };
 }
@@ -293,7 +293,7 @@ export async function sweepCourt(db: Db, now: number) {
     await db.update(schema.cases).set({ status: 'hearing' }).where(eq(schema.cases.id, c.id));
     await tellParties(db, c, `🏛️ Case #${c.number} is in session`, 'The judge will rule soon.');
   }
-  for (const c of await db.select().from(schema.cases).where(and(inArray(schema.cases.status, ['hearing', 'appealed']), sql`${schema.cases.hearingAt} <= ${now - 2 * HOUR}`))) await autoJudge(db, c);
+  for (const c of await db.select().from(schema.cases).where(and(inArray(schema.cases.status, ['hearing', 'appealed']), sql`${schema.cases.hearingAt} <= ${now - 24 * GAME_HOUR}`))) await autoJudge(db, c);
   for (const c of await db.select().from(schema.cases).where(and(eq(schema.cases.status, 'decided'), sql`${schema.cases.appealDeadline} <= ${now}`))) await applyRemedy(db, c);
 }
 

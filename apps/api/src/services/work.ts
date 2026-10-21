@@ -6,10 +6,10 @@
  */
 import * as z from 'zod/v4';
 import { and, asc, desc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
-import { CLIENT_NAMES, WORK_CATEGORIES, WORK_TEMPLATES, autoGrade, findWorkTemplate, type WorkCategory, type WorkTemplate } from '@dw/shared/live';
+import { CLIENT_NAMES, WORK_CATEGORIES, WORK_TEMPLATES, autoGrade, findWorkTemplate, type WorkCategory, type WorkTemplate, GAME_HOUR, GAME_DAY, gameDay } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import type { Account, Company } from '../http/router';
-import { clock, DAY, dayKey, HOUR, MINUTE } from '../lib/time';
+import { clock, MINUTE } from '../lib/time';
 import { newId } from '../lib/ids';
 import { badRequest, conflict, forbidden, notFound } from '../lib/errors';
 import { audit, getSettings, hint, notify, topics } from './core';
@@ -130,7 +130,19 @@ const SIZES = { 1: { reward: 60, energy: 5, minutes: 15 }, 2: { reward: 110, ene
 /** Ask the AI to draft a template from a short idea. Returns a draft for the Owner to check and save. */
 export async function aiDraftTemplate(idea: string, category?: string): Promise<TemplateInput> {
   const prompt = `Make one office-work task from this idea from the game Owner:\n<idea>${idea.slice(0, 1500)}</idea>${category ? `\nCategory: ${category}` : ''}`;
-  const d = await aiJson(AiTemplate, MAKER_SYSTEM, prompt, { timeoutMs: 9500, maxTokens: 2500 });
+  return draftFrom(await aiJson(AiTemplate, MAKER_SYSTEM, prompt, { timeoutMs: 9500, maxTokens: 2500 }));
+}
+
+const AiClientJob = AiTemplate.extend({ clientName: z.string(), clientEmoji: z.string(), clientNote: z.string() });
+
+/** One AI call: a client character plus the job they bring (for the Owner's "send an AI client"). */
+export async function aiDraftClientJob(idea: string, companyName: string | null) {
+  const prompt = `Invent a quirky, friendly business client${companyName ? ` who walks into the company "${companyName}"` : ''} with an office job for them, plus the client's 1-2 sentence note to the worker.\n<idea>${idea.slice(0, 1500) || 'anything fun and realistic'}</idea>`;
+  const d = await aiJson(AiClientJob, MAKER_SYSTEM, prompt, { timeoutMs: 9500, maxTokens: 2500 });
+  return { template: draftFrom(d), client: { name: d.clientName.slice(0, 40), emoji: [...d.clientEmoji].slice(0, 2).join('') || '🧑‍💼', note: d.clientNote.slice(0, 300) } };
+}
+
+function draftFrom(d: z.infer<typeof AiTemplate>): TemplateInput {
   const difficulty = (Math.min(3, Math.max(1, Math.round(d.difficulty))) as 1 | 2 | 3) ?? 1;
   const keys = new Set<string>();
   const fields = d.fields.slice(0, 8).map((f, i) => {
@@ -195,7 +207,7 @@ export async function postJob(db: Db, by: 'owner' | 'auto', o: PostJob) {
     postedBy: by,
     funded: reward * slots,
     createdAt: now,
-    expiresAt: now + Math.max(1, Math.min(24 * 14, o.hours)) * HOUR,
+    expiresAt: now + Math.max(1, Math.min(24 * 30, o.hours)) * GAME_HOUR,
   });
   if (o.targetCompanyId) await notify(db, { companyId: o.targetCompanyId }, 'job', `💼 New office job just for you: ${task.title}`, `${reward} BT. Find it under Office Work.`);
   await hint(db, topics.all, { t: 'jobs' });
@@ -409,14 +421,14 @@ export async function sweepWork(db: Db, now: number, allowAi: boolean) {
   // AI clients: a few jobs a day, spread out
   const s = await getSettings(db);
   if (s.autoJobsPerDay <= 0) return;
-  const today = await db.select({ n: sql<number>`count(*)::int` }).from(schema.jobs).where(and(eq(schema.jobs.postedBy, 'auto'), gt(schema.jobs.createdAt, now - DAY)));
+  const today = await db.select({ n: sql<number>`count(*)::int` }).from(schema.jobs).where(and(eq(schema.jobs.postedBy, 'auto'), gt(schema.jobs.createdAt, now - GAME_DAY)));
   const open = await db.select({ n: sql<number>`count(*)::int` }).from(schema.jobs).where(and(eq(schema.jobs.postedBy, 'auto'), eq(schema.jobs.status, 'open')));
   const wantOpen = allowAi ? 3 : 1;
   if (today[0].n >= s.autoJobsPerDay || open[0].n >= wantOpen) return;
   // pick by day so everyone sees variety, and skip AI-graded ones when no AI is on
   const useAi = aiAvailable() && s.aiEnabled;
   const pool = WORK_TEMPLATES.filter((t) => t.grading === 'auto' || (t.grading === 'ai' && useAi));
-  const t = pool[(Number(dayKey(now).replace(/-/g, '')) * 7 + today[0].n * 13 + Math.floor(Math.random() * pool.length)) % pool.length];
+  const t = pool[(gameDay(now) * 7 + today[0].n * 13 + Math.floor(Math.random() * pool.length)) % pool.length];
   let client: { name: string; emoji: string; note: string } | null = null;
   if (allowAi && useAi) {
     try {
@@ -433,7 +445,7 @@ export async function sweepWork(db: Db, now: number, allowAi: boolean) {
   await postJob(db, 'auto', {
     templateId: t.id,
     slots: 2 + Math.floor(Math.random() * 3),
-    hours: 12,
+    hours: 24,
     clientName: client?.name.slice(0, 40),
     clientEmoji: client ? [...client.emoji].slice(0, 2).join('') : undefined,
     clientNote: client?.note.slice(0, 300),

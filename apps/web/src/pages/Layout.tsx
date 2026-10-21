@@ -1,13 +1,13 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { formatBits } from '@dw/shared/live';
+import { formatBits, formatGameClock, gameTime } from '@dw/shared/live';
 import { POST } from '../lib/api';
 import { useApi, useAction, type Me } from '../lib/hooks';
 import { connectLive, disconnectLive } from '../lib/live';
 import { sfx } from '../lib/sound';
 import { BossByteFace } from '../components/BossByte';
-import { Modal, ProgressBar, timeAgo } from '../components/ui';
+import { Modal, ProgressBar, timeAgo, useNow } from '../components/ui';
 
 export const MeContext = createContext<Me | null>(null);
 export function useMe2(): Me {
@@ -61,6 +61,17 @@ export function navFor(me: Me): NavItem[] {
   return [...owner, ...play, ...social, ...mine, { to: '/settings', label: 'Settings', emoji: '⚙️' }];
 }
 
+/** The in-game clock: 1 real hour = 12 game hours. */
+function GameClock() {
+  const now = useNow(5_000);
+  const hour = new Date(gameTime(now)).getUTCHours();
+  return (
+    <div className="chip text-xs whitespace-nowrap" title="Game time: 1 real hour = 12 game hours, so a game day lasts 2 real hours." data-testid="game-clock">
+      {hour >= 6 && hour < 18 ? '☀️' : '🌙'} {formatGameClock(now)}
+    </div>
+  );
+}
+
 /** Subscribe to live hints for this login. */
 function Live({ me }: { me: Me }) {
   const qc = useQueryClient();
@@ -111,6 +122,7 @@ export function Layout({ me }: { me: Me }) {
             </div>
           )}
           <div className="ml-auto flex items-center gap-2">
+            <GameClock />
             {me.company && (
               <div className="text-right font-display font-extrabold text-lg leading-tight" data-testid="balance">
                 {formatBits(me.company.balance)}

@@ -5,10 +5,10 @@
  * daily dues into a treasury, and trade with each other at half the sales tax.
  */
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
-import { UNION_OFFICES, type UnionOffice } from '@dw/shared/live';
+import { UNION_OFFICES, type UnionOffice, GAME_DAY, GAME_MINUTE, gameDayKey } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import type { Account, Company } from '../http/router';
-import { clock, dayKey, DAY, MINUTE } from '../lib/time';
+import { clock } from '../lib/time';
 import { newId } from '../lib/ids';
 import { badRequest, conflict, forbidden, notFound } from '../lib/errors';
 import { addNews, getSettings, hint, notify, topics } from './core';
@@ -59,7 +59,7 @@ export async function createUnion(db: Db, account: Account, company: Company, o:
   await pay(db, W.company(company.id), W.treasury, s.unionCreateCost, 'union.create', `Founded ${name}`, account.id);
   const now = clock.now();
   const id = newId('uni');
-  await db.insert(schema.unions).values({ id, name, emoji: o.emoji || '✊', motto: o.motto.slice(0, 120), presidentId: company.id, dues: clampDues(o.dues), termEndsAt: now + s.unionTermDays * DAY, duesDay: dayKey(now), createdAt: now });
+  await db.insert(schema.unions).values({ id, name, emoji: o.emoji || '✊', motto: o.motto.slice(0, 120), presidentId: company.id, dues: clampDues(o.dues), termEndsAt: now + s.unionTermDays * GAME_DAY, duesDay: gameDayKey(now), createdAt: now });
   await db.insert(schema.unionMembers).values({ companyId: company.id, unionId: id, repAccountId: account.id, joinedAt: now });
   await addNews(db, 'union', `${o.emoji || '✊'} ${company.name} founds the union "${name}"`, o.motto, company.id);
   return { id };
@@ -169,7 +169,7 @@ async function startElection(db: Db, unionId: string, office: UnionOffice) {
   if (existing) return existing;
   const s = await getSettings(db);
   const now = clock.now();
-  const row = { id: newId('el', 12), unionId, office, targetId: null, targetOffice: null, status: 'nominating', votingAt: now + s.nominateMinutes * MINUTE, closesAt: now + (s.nominateMinutes + s.voteMinutes) * MINUTE, winnerId: null, result: null, createdAt: now };
+  const row = { id: newId('el', 12), unionId, office, targetId: null, targetOffice: null, status: 'nominating', votingAt: now + s.nominateMinutes * GAME_MINUTE, closesAt: now + (s.nominateMinutes + s.voteMinutes) * GAME_MINUTE, winnerId: null, result: null, createdAt: now };
   await db.insert(schema.elections).values(row);
   return row;
 }
@@ -238,7 +238,7 @@ export async function callRecall(db: Db, account: Account, company: Company, off
   await pay(db, W.company(company.id), W.union(u.id), 100, 'union.recall', 'Vote of no confidence', account.id);
   const s = await getSettings(db);
   const now = clock.now();
-  const row = { id: newId('el', 12), unionId: u.id, office: 'recall', targetId: holder, targetOffice: office, status: 'voting', votingAt: now, closesAt: now + s.voteMinutes * MINUTE, winnerId: null, result: null, createdAt: now };
+  const row = { id: newId('el', 12), unionId: u.id, office: 'recall', targetId: holder, targetOffice: office, status: 'voting', votingAt: now, closesAt: now + s.voteMinutes * GAME_MINUTE, winnerId: null, result: null, createdAt: now };
   await db.insert(schema.elections).values(row);
   await tell(db, u.id, `⚠️ Vote of no confidence in ${u.name}`, `Should the ${UNION_OFFICES[office].label} stay? Vote now.`);
   await ping(db, u.id);
@@ -300,11 +300,11 @@ export async function sweepUnions(db: Db, now: number) {
   for (const e of await db.select().from(schema.elections).where(and(eq(schema.elections.status, 'voting'), sql`${schema.elections.closesAt} <= ${now}`))) await closeElection(db, e);
   const s = await getSettings(db);
   for (const u of await db.select().from(schema.unions).where(sql`${schema.unions.termEndsAt} <= ${now}`)) {
-    await db.update(schema.unions).set({ termEndsAt: now + s.unionTermDays * DAY }).where(eq(schema.unions.id, u.id));
+    await db.update(schema.unions).set({ termEndsAt: now + s.unionTermDays * GAME_DAY }).where(eq(schema.unions.id, u.id));
     for (const o of OFFICES) await startElection(db, u.id, o);
     await tell(db, u.id, `🗳️ ${u.name}: the term is over!`, 'Elections for all three offices have started.');
   }
-  const today = dayKey(now);
+  const today = gameDayKey(now);
   for (const u of await db.select().from(schema.unions).where(sql`coalesce(${schema.unions.duesDay}, '') <> ${today}`)) {
     await db.update(schema.unions).set({ duesDay: today }).where(eq(schema.unions.id, u.id));
     if (u.dues <= 0) continue;

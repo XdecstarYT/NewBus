@@ -22,7 +22,7 @@ export const onHint = (fn: (topic: string, h: Hint) => void) => {
 const REFRESH: Record<string, string[][]> = {
   stock: [['home'], ['me'], ['shop']],
   company: [['home'], ['me']],
-  notify: [['me'], ['notifications']],
+  notify: [['me'], ['notifications'], ['requests']],
   news: [['news']],
   market: [['market']],
   shops: [['shops'], ['storefront']],

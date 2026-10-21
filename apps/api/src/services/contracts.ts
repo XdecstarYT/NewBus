@@ -4,10 +4,10 @@
  * (minus sales tax); missing the deadline refunds the buyer, who can then sue.
  */
 import { and, desc, eq, lt, or, sql } from 'drizzle-orm';
-import { ITEMS, isItem, type ItemId } from '@dw/shared/live';
+import { ITEMS, isItem, type ItemId, GAME_HOUR } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import type { Account, Company } from '../http/router';
-import { clock, HOUR } from '../lib/time';
+import { clock } from '../lib/time';
 import { newId } from '../lib/ids';
 import { badRequest, conflict, forbidden, notFound } from '../lib/errors';
 import { addNews, assertAllowed, hint, notify, topics } from './core';
@@ -52,8 +52,8 @@ export async function create(db: Db, account: Account, buyer: Company, o: NewCon
     note: o.note,
     status: 'open',
     createdAt: now,
-    acceptBy: now + o.acceptHours * HOUR,
-    deliverBy: now + (o.acceptHours + o.deliverHours) * HOUR,
+    acceptBy: now + o.acceptHours * GAME_HOUR,
+    deliverBy: now + (o.acceptHours + o.deliverHours) * GAME_HOUR,
   });
   if (o.offeredTo) await notify(db, { companyId: o.offeredTo }, 'contract', `📝 ${buyer.emoji} ${buyer.name} offers you a contract`, `${label(o)} for ${o.price} BT.`);
   await hint(db, topics.all, { t: 'contracts' });

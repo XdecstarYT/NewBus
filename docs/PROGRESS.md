@@ -53,6 +53,12 @@ Design: [SPEC-v2.md](SPEC-v2.md). It's a player-run economy hosted on **Netlify 
   - Daily quests, personal skill levels (+2% shift output per level, up to +40%), and company badges.
   - Tests: 25 API tests (8 new) and 3 browser tests. Tables applied to Supabase as `0001_mega2`.
 
+- **Owner AI tools and game time**
+  - Game clock: 1 real hour = 12 game hours (`packages/shared/src/live/time.ts`). Durations entered in hours/days (contracts, jobs, requests, elections, court, laws, sanctions, union terms) and game days (quests, union dues, AI client jobs) use it; office-job timers, Energy, mutes and checkout codes stay real-time.
+  - AI actions: plain-English orders become typed actions the Owner edits and sends: Bit/goods requests (`owner_requests`, pay/decline/expire), grants, fines, messages, news and client jobs.
+  - Send an AI client to a company: one AI call writes the client and a new job, or picks a ready-made job.
+  - Tests: 28 API tests, 3 browser tests. Tables applied to Supabase as `0002_owner_requests`.
+
 ### Still open / ideas
 - Live updates use public broadcast channels whose names contain unguessable ids; the hints carry no game data. Private channels would need Supabase Auth.
 - Player-to-player loans would fit well next.

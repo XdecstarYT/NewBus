@@ -1,9 +1,9 @@
 /** Laws: the Owner proposes, every company gets one vote, the Owner can sign or veto. */
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { LAW_KINDS, type LawKind } from '@dw/shared/live';
+import { LAW_KINDS, type LawKind, GAME_HOUR, GAME_DAY } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import type { Company } from '../http/router';
-import { clock, DAY, HOUR } from '../lib/time';
+import { clock } from '../lib/time';
 import { newId } from '../lib/ids';
 import { badRequest, conflict, notFound } from '../lib/errors';
 import { addNews, getSettings, hint, patchSettings, setValue, topics } from './core';
@@ -23,7 +23,7 @@ export async function propose(db: Db, kind: string, value: number) {
   if (kind === 'energy' && (v < 1 || v > 50)) throw badRequest('Energy boost must be 1 to 50 per hour.');
   const s = await getSettings(db);
   const now = clock.now();
-  const row = { id: newId('law', 12), kind, value: v, title: lawTitle(kind as LawKind, v), status: 'voting', yes: 0, no: 0, createdAt: now, closesAt: now + s.lawVoteHours * HOUR, decidedAt: null };
+  const row = { id: newId('law', 12), kind, value: v, title: lawTitle(kind as LawKind, v), status: 'voting', yes: 0, no: 0, createdAt: now, closesAt: now + s.lawVoteHours * GAME_HOUR, decidedAt: null };
   await db.insert(schema.laws).values(row);
   await addNews(db, 'law', `🏛️ New bill: ${row.title}`, 'Every company gets one vote. Vote in 🏛️ Town Hall.');
   return row;
@@ -48,7 +48,7 @@ export async function vote(db: Db, company: Company, lawId: string, choice: 'yes
 
 async function enact(db: Db, law: typeof schema.laws.$inferSelect) {
   if (law.kind === 'tax') await patchSettings(db, { salesTaxPct: law.value });
-  else if (law.kind === 'energy') await setValue(db, 'energyBoost', { value: law.value, until: clock.now() + DAY });
+  else if (law.kind === 'energy') await setValue(db, 'energyBoost', { value: law.value, until: clock.now() + GAME_DAY });
   else if (law.kind === 'stimulus') {
     const cos = await db.select({ id: schema.companies.id }).from(schema.companies).where(eq(schema.companies.status, 'active'));
     if (!cos.length) return;

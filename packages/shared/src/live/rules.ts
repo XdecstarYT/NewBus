@@ -40,7 +40,7 @@ export type EvidenceKind = keyof typeof EVIDENCE_KINDS;
 export const LAW_KINDS = {
   tax: { label: 'Set the sales tax', emoji: '🧾', unit: '%', blurb: 'Sales tax on every market, shop and POS sale becomes this %.' },
   stimulus: { label: 'Stimulus payment', emoji: '💸', unit: 'BT each', blurb: 'The Treasury pays this much to every company.' },
-  energy: { label: 'Energy boost', emoji: '⚡', unit: 'Energy/hour for 24 h', blurb: 'Everyone regenerates this much extra Energy per hour for a day.' },
+  energy: { label: 'Energy boost', emoji: '⚡', unit: 'Energy/hour for a game day', blurb: 'Everyone regenerates this much extra Energy per hour for one game day.' },
 } as const;
 export type LawKind = keyof typeof LAW_KINDS;
 
@@ -51,16 +51,17 @@ export const DEFAULT_SETTINGS = {
   /** Union members pay half tax when trading with each other. */
   unionTaxDiscount: true,
   courtFilingPct: 5,
+  // all timings below are in game time (1 real hour = 12 game hours)
   appealHours: 24,
-  hearingMinutes: 60,
-  nominateMinutes: 30,
-  voteMinutes: 60,
-  unionTermDays: 3,
+  hearingMinutes: 720,
+  nominateMinutes: 360,
+  voteMinutes: 720,
+  unionTermDays: 7,
   lawVoteHours: 24,
   /** Office work and AI customers are paid by the Treasury; when it runs dry, new Bits top it up. */
   mintForWork: true,
-  /** Office-work jobs posted automatically by AI clients each day. */
-  autoJobsPerDay: 6,
+  /** Office-work jobs posted automatically by AI clients each game day. */
+  autoJobsPerDay: 2,
   /** How many AI customer orders are open at once. */
   customersOpen: 6,
   /** AI customers pay this % of the going market price. */

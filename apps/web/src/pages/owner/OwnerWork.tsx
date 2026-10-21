@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { WORK_CATEGORIES, type WorkCategory } from '@dw/shared/live';
+import { GAME_HOUR, ITEM_IDS, WORK_CATEGORIES, formatGameDuration, type WorkCategory } from '@dw/shared/live';
 import { PATCH, POST } from '../../lib/api';
 import { useApi, useAction } from '../../lib/hooks';
-import { formatBits } from '../../lib/game';
+import { formatBits, itemLabel } from '../../lib/game';
 import { EmptyState, LoadingJoke, Tabs, timeAgo, timeLeft, Toggle } from '../../components/ui';
 import { AnswerBox, GRADING, Reference } from '../play/Work';
 
@@ -112,7 +112,7 @@ function PostJob({ t, onDone, onBack }: { t: any; onDone: () => void; onBack: ()
       <div className="grid grid-cols-3 gap-2">
         <label className="label">Spots<input type="number" className="input" min={1} max={50} value={f.slots} onChange={(e) => setF({ ...f, slots: Math.max(1, Math.floor(Number(e.target.value) || 1)) })} /></label>
         <label className="label">Pay per spot (BT)<input type="number" className="input" min={1} value={f.reward} onChange={(e) => setF({ ...f, reward: Math.max(1, Math.floor(Number(e.target.value) || 1)) })} /></label>
-        <label className="label">Open for (hours)<input type="number" className="input" min={1} max={336} value={f.hours} onChange={(e) => setF({ ...f, hours: Number(e.target.value) || 1 })} /></label>
+        <label className="label">Open for (game hours)<input type="number" className="input" min={1} max={336} value={f.hours} onChange={(e) => setF({ ...f, hours: Number(e.target.value) || 1 })} /></label>
       </div>
       <div className="grid grid-cols-[1fr_80px] gap-2">
         <label className="label">Client name (blank = random)<input className="input" maxLength={40} value={f.clientName} onChange={(e) => setF({ ...f, clientName: e.target.value })} placeholder="Grandma Gloria" /></label>
@@ -296,6 +296,9 @@ export function OwnerAI() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="h1">🤖 AI</h1>
+      <AiActions on={a.on} />
+      <SendClient on={a.on} />
+      <Requests />
       <div className={`card flex flex-col gap-2 ${a.on ? '!bg-emerald-50' : '!bg-amber-50'}`}>
         <div className="h3">{a.on ? '🟢 The AI is on' : a.configured ? '🟡 Key found, but AI is switched off' : '🔴 No AI key yet'}</div>
         {!a.configured && <p className="text-sm">Add your Claude API key in Netlify: <b>Site configuration → Environment variables → AIK</b>, then redeploy. Everything still works without it: built-in customers and clients, and written work goes to you to grade.</p>}
@@ -326,6 +329,119 @@ export function OwnerAI() {
         <Toggle checked={settings.mintForWork} onChange={(v) => setS({ ...settings, mintForWork: v })} label="If the Treasury runs dry, print new Bits for office pay, customers and quests" />
         <button className="btn-primary self-start" disabled={!s || save.isPending} onClick={() => save.mutate(undefined)}>Save</button>
       </div>
+    </div>
+  );
+}
+
+// ============================================================ send an AI client
+function SendClient({ on }: { on: boolean }) {
+  const companies = useApi<any[]>(['companies'], '/game/companies');
+  const [f, setF] = useState({ companyId: '', idea: '', slots: 1, reward: 0, hours: 24 });
+  const send = useAction(() => POST<any>('/owner/ai/client', { companyId: f.companyId || null, idea: f.idea, slots: f.slots, reward: f.reward || undefined, hours: f.hours }), {
+    invalidate: [['owner', 'work']],
+    success: (r) => `${r.client.emoji} ${r.client.name} is on the way with "${r.title}" (${r.reward} BT).`,
+    onSuccess: () => setF({ ...f, idea: '' }),
+  });
+  return (
+    <form className="card flex flex-col gap-2" onSubmit={(e) => (e.preventDefault(), send.mutate(undefined))}>
+      <div className="h3">🧑‍💼 Send an AI client to a business</div>
+      <p className="text-sm muted">A client character walks into a company with an office job. Describe the job and the AI writes it from scratch, or leave it empty for a ready-made job.</p>
+      <div className="grid sm:grid-cols-[1fr_90px_110px_130px] gap-2">
+        <label className="label">Send to<select className="input" value={f.companyId} onChange={(e) => setF({ ...f, companyId: e.target.value })} data-testid="client-company"><option value="">Anyone (open job)</option>{(companies.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>)}</select></label>
+        <label className="label">Spots<input type="number" className="input" min={1} max={50} value={f.slots} onChange={(e) => setF({ ...f, slots: Math.max(1, Math.floor(Number(e.target.value) || 1)) })} /></label>
+        <label className="label">Pay (0 = usual)<input type="number" className="input" min={0} value={f.reward} onChange={(e) => setF({ ...f, reward: Math.max(0, Math.floor(Number(e.target.value) || 0)) })} /></label>
+        <label className="label">Stays (game h)<input type="number" className="input" min={1} max={720} value={f.hours} onChange={(e) => setF({ ...f, hours: Math.max(1, Number(e.target.value) || 1) })} /></label>
+      </div>
+      <label className="label">The job (optional)<input className="input" maxLength={1500} value={f.idea} onChange={(e) => setF({ ...f, idea: e.target.value })} placeholder="a café owner needs this week's receipts added up" disabled={!on} /></label>
+      {!on && <p className="text-xs muted">AI is off: clients bring ready-made jobs with built-in characters.</p>}
+      <button className="btn-primary self-start" disabled={send.isPending} data-testid="send-client">{send.isPending ? '🤖 Writing the client...' : '🚪 Send the client'}</button>
+    </form>
+  );
+}
+
+// ============================================================ AI actions
+const KINDS: Record<string, string> = {
+  request_bits: '📬 Request Bits',
+  request_items: '📦 Request goods',
+  grant: '🎁 Grant Bits',
+  fine: '🧾 Fine',
+  message: '✉️ Message',
+  news: '📰 News headline',
+  client_job: '💼 Client job',
+};
+
+function AiActions({ on }: { on: boolean }) {
+  const companies = useApi<any[]>(['companies'], '/game/companies');
+  const [instruction, setInstruction] = useState('');
+  const [plan, setPlan] = useState<{ summary: string; actions: any[] } | null>(null);
+  const make = useAction(() => POST<any>('/owner/ai/plan', { instruction }), { onSuccess: (r) => setPlan(r) });
+  const run = useAction(() => POST<any>('/owner/ai/run', { actions: plan!.actions }), {
+    invalidate: [['owner']],
+    success: (r) => `Sent! ${r.done.join(' · ')}`,
+    onSuccess: () => (setPlan(null), setInstruction('')),
+  });
+  const set = (i: number, patch: any) => setPlan({ ...plan!, actions: plan!.actions.map((a, k) => (k === i ? { ...a, ...patch } : a)) });
+  const examples = ['Request 200 bits from every company for the new road', 'Ask Wheaty Farms for 30 wheat for the town festival', 'Give everyone 100 bits and post a news headline about the holiday bonus', 'Send a client with an invoice job to every company'];
+  const name = (id: string) => (id === 'all' ? '🌍 Every company' : (companies.data ?? []).find((c) => c.id === id)?.name ?? id);
+  if (!on) return <div className="card"><div className="h3">✨ AI actions</div><p className="text-sm muted">Turn the AI on (add AIK in Netlify) to give orders in plain English.</p></div>;
+  return (
+    <div className="card flex flex-col gap-2">
+      <div className="h3">✨ AI actions</div>
+      <p className="text-sm muted">Say what you want in plain English. The AI turns it into actions; you check and edit them, then send. Nothing happens until you press Send.</p>
+      <form className="flex flex-col gap-2" onSubmit={(e) => (e.preventDefault(), make.mutate(undefined))}>
+        <textarea className="input" rows={2} maxLength={1500} value={instruction} onChange={(e) => setInstruction(e.target.value)} placeholder="Request 500 bits from Crusty Dreams for the bakery licence, due tomorrow" aria-label="Your instruction" />
+        <div className="flex flex-wrap gap-1">{examples.map((x) => <button type="button" key={x} className="chip text-xs hover:bg-accent/10" onClick={() => setInstruction(x)}>{x}</button>)}</div>
+        <button className="btn-primary self-start" disabled={make.isPending || instruction.trim().length < 3} data-testid="ai-plan">{make.isPending ? '🤖 Thinking...' : '✨ Turn into actions'}</button>
+      </form>
+      {plan && (
+        <div className="flex flex-col gap-2 border-t border-ink/10 pt-2">
+          <div className="text-sm">🤖 {plan.summary}</div>
+          {!plan.actions.length && <p className="text-sm muted">No actions. Try saying it another way.</p>}
+          {plan.actions.map((a, i) => (
+            <div key={i} className="card-flat !p-2 flex flex-col gap-2" data-testid="ai-action">
+              <div className="flex flex-wrap gap-2 items-end">
+                <label className="label">What<select className="input" value={a.kind} onChange={(e) => set(i, { kind: e.target.value })}>{Object.entries(KINDS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+                {a.kind !== 'news' && <label className="label">Who<select className="input" value={a.target} onChange={(e) => set(i, { target: e.target.value })}><option value="all">🌍 Every company</option>{(companies.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>)}</select></label>}
+                {['request_bits', 'grant', 'fine', 'client_job'].includes(a.kind) && <label className="label">{a.kind === 'client_job' ? 'Pay (0 = usual)' : 'Bits'}<input type="number" className="input !w-28" min={0} value={a.amount} onChange={(e) => set(i, { amount: Math.max(0, Math.floor(Number(e.target.value) || 0)) })} /></label>}
+                {a.kind === 'request_items' && (
+                  <>
+                    <label className="label">Item<select className="input" value={a.item} onChange={(e) => set(i, { item: e.target.value })}><option value="">Pick...</option>{ITEM_IDS.map((x) => <option key={x} value={x}>{itemLabel(x)}</option>)}</select></label>
+                    <label className="label">How many<input type="number" className="input !w-24" min={0} value={a.qty} onChange={(e) => set(i, { qty: Math.max(0, Math.floor(Number(e.target.value) || 0)) })} /></label>
+                  </>
+                )}
+                {['request_bits', 'request_items', 'client_job'].includes(a.kind) && <label className="label">Within (game h)<input type="number" className="input !w-24" min={1} max={720} value={a.dueHours} onChange={(e) => set(i, { dueHours: Math.max(1, Number(e.target.value) || 1) })} /></label>}
+                <button type="button" className="btn-ghost btn-sm ml-auto" onClick={() => setPlan({ ...plan, actions: plan.actions.filter((_, k) => k !== i) })} aria-label="Remove action">🗑️</button>
+              </div>
+              <input className="input" maxLength={100} value={a.title} onChange={(e) => set(i, { title: e.target.value })} placeholder="Title" aria-label="Title" />
+              <textarea className="input" rows={2} maxLength={500} value={a.message} onChange={(e) => set(i, { message: e.target.value })} placeholder="Message" aria-label="Message" />
+              <div className="text-xs muted">→ {a.kind === 'news' ? 'everyone' : name(a.target)}{['request_bits', 'request_items'].includes(a.kind) ? ` · they can pay or decline within ${formatGameDuration(a.dueHours * GAME_HOUR)} (${Math.round((a.dueHours / 12) * 10) / 10} real hours)` : ''}</div>
+            </div>
+          ))}
+          <div className="flex gap-2">
+            <button className="btn-good" disabled={run.isPending || !plan.actions.length} onClick={() => run.mutate(undefined)} data-testid="ai-run">📨 Send {plan.actions.length} action{plan.actions.length === 1 ? '' : 's'}</button>
+            <button className="btn-ghost" onClick={() => setPlan(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Requests() {
+  const q = useApi<any[]>(['owner', 'requests'], '/owner/requests', { refetchInterval: 30_000 });
+  const cancel = useAction((id: string) => POST(`/owner/requests/${id}/cancel`), { invalidate: [['owner', 'requests']], success: 'Request withdrawn.' });
+  const STATUS: Record<string, string> = { pending: '⏳ Waiting', paid: '✅ Paid', declined: '🙅 Declined', expired: '⌛ No answer', cancelled: '🚫 Withdrawn' };
+  if (!q.data?.length) return null;
+  return (
+    <div className="card">
+      <div className="h3 mb-1">📬 Your requests</div>
+      {q.data.map((r) => (
+        <div key={r.id} className="flex flex-wrap items-center gap-2 text-sm py-1 border-b border-ink/5">
+          <span className="flex-1">{r.company?.emoji} {r.company?.name}: <b>{r.title}</b> · {r.kind === 'bits' ? formatBits(r.amount) : `${r.qty}× ${itemLabel(r.item)}`}</span>
+          <span className="text-xs">{STATUS[r.status]}</span>
+          {r.status === 'pending' && <><span className="text-xs muted">{timeLeft(r.dueAt)} left</span><button className="btn-ghost btn-sm" onClick={() => cancel.mutate(r.id)}>Withdraw</button></>}
+        </div>
+      ))}
     </div>
   );
 }

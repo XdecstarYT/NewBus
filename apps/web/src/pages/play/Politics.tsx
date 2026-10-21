@@ -38,7 +38,7 @@ function UnionList({ data }: { data: any }) {
               <div className="flex-1 min-w-[10rem]">
                 <Link to={`/unions/${u.id}`} className="font-bold underline">{u.name}</Link>
                 <div className="text-xs muted">{u.motto}</div>
-                <div className="text-xs">👥 {u.members} · 👑 {u.president ? `${u.president.emoji} ${u.president.name}` : 'vacant'} · 💼 {formatBits(u.treasury)} · dues {formatBits(u.dues)}/day</div>
+                <div className="text-xs">👥 {u.members} · 👑 {u.president ? `${u.president.emoji} ${u.president.name}` : 'vacant'} · 💼 {formatBits(u.treasury)} · dues {formatBits(u.dues)}/game day</div>
               </div>
               <button className="btn-primary btn-sm" disabled={!u.open} onClick={() => join.mutate(u.id)}>{u.open ? 'Join' : '🔒 Closed'}</button>
             </div>
@@ -212,7 +212,7 @@ function UnionSettings({ u }: { u: any }) {
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={cfg.open} onChange={(e) => setCfg({ ...cfg, open: e.target.checked })} /> Open to new members</label>
             <button className="btn-primary self-start" onClick={() => save.mutate(undefined)}>Save</button>
           </>
-        ) : <p className="text-sm muted">Dues: {formatBits(u.dues)} a day. Miss three days and you're out.</p>}
+        ) : <p className="text-sm muted">Dues: {formatBits(u.dues)} a game day (every 2 real hours). Miss three game days and you're out.</p>}
         {u.me.offices.map((o: UnionOffice) => <button key={o} className="btn-ghost btn-sm self-start" onClick={async () => (await confirm({ title: `Resign as ${UNION_OFFICES[o].label}?` })) && resign.mutate(o)}>Resign as {UNION_OFFICES[o].label}</button>)}
         <button className="btn-bad btn-sm self-start mt-2" onClick={async () => (await confirm({ title: `Leave ${u.name}?`, danger: true })) && leave.mutate(undefined)}>Leave union</button>
       </div>
@@ -292,7 +292,7 @@ export function Court() {
           </select>
           <label className="label">What happened?<input className="input" maxLength={120} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
           <label className="label">Claim (BT)<input type="number" className="input" min={0} value={f.claim} onChange={(e) => setF({ ...f, claim: Math.max(0, Math.floor(Number(e.target.value) || 0)) })} /></label>
-          <div className="text-xs muted">Filing fee {formatBits(Math.max(50, Math.round(f.claim * 0.05)))}. The Owner is the judge; if they don't rule within 2 hours of the hearing, the evidence decides.</div>
+          <div className="text-xs muted">Filing fee {formatBits(Math.max(50, Math.round(f.claim * 0.05)))}. The Owner is the judge; if they don't rule within a game day of the hearing, the evidence decides.</div>
           <button className="btn-primary" disabled={!f.defendantId || f.title.trim().length < 3 || file.isPending} onClick={() => file.mutate(undefined)} data-testid="file-case">⚖️ File case</button>
         </div>
       </div>
@@ -335,7 +335,7 @@ export function CaseDetail({ owner = false }: { owner?: boolean }) {
         {c.verdict && (
           <div className="card-flat !p-2 text-sm">
             🔨 <b>{c.verdict === 'plaintiff' ? c.plaintiff.name : c.defendant.name} wins.</b> {c.reasoning}
-            {c.verdict === 'plaintiff' && <div>{[r.damages && `${formatBits(r.damages)} damages`, r.fine && `${formatBits(r.fine)} fine`, r.freezeHours && `assets frozen ${r.freezeHours} h`, r.suspend && `${FEATURES[r.suspend as Feature]?.label} suspended ${r.suspendHours} h`].filter(Boolean).join(' · ') || 'No penalties.'}</div>}
+            {c.verdict === 'plaintiff' && <div>{[r.damages && `${formatBits(r.damages)} damages`, r.fine && `${formatBits(r.fine)} fine`, r.freezeHours && `assets frozen ${r.freezeHours} game h`, r.suspend && `${FEATURES[r.suspend as Feature]?.label} suspended ${r.suspendHours} game h`].filter(Boolean).join(' · ') || 'No penalties.'}</div>}
             {c.status === 'decided' && c.appealDeadline && <div className="text-xs muted">Penalties apply in {timeLeft(c.appealDeadline)} unless appealed.</div>}
           </div>
         )}

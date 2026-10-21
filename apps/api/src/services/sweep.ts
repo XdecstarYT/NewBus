@@ -13,6 +13,7 @@ import { sweepLaws } from './laws';
 import { retryAiGrading, sweepWork } from './work';
 import { sweepCustomers } from './customers';
 import { sweepContracts } from './contracts';
+import { sweepRequests } from './ownerai';
 
 let lastLocal = 0;
 
@@ -34,6 +35,7 @@ export async function sweep(db: Db, force = false, opts: { allowAi?: boolean } =
     await sweepLaws(t, now);
     await t.update(schema.checkouts).set({ status: 'cancelled' }).where(and(eq(schema.checkouts.status, 'open'), lt(schema.checkouts.expiresAt, now - 60 * MINUTE)));
     await sweepContracts(t, now);
+    await sweepRequests(t, now);
     if (!opts.allowAi) {
       await sweepWork(t, now, false);
       await sweepCustomers(t, now, false);

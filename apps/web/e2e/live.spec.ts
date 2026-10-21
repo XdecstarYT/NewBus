@@ -88,9 +88,18 @@ test('owner builds an office-work template with reference data; a friend does th
   await owner.getByTestId('post-job').click();
   await expect(owner.getByText(/Posted!/)).toBeVisible();
 
+  // send a client (AI is off in tests, so a built-in character brings a ready-made job)
+  await owner.goto('/owner/ai');
+  const farmOption = owner.getByTestId('client-company').locator('option', { hasText: 'Wheaty Farms' });
+  await expect(farmOption).toHaveCount(1);
+  await owner.getByTestId('client-company').selectOption((await farmOption.getAttribute('value'))!);
+  await owner.getByTestId('send-client').click();
+  await expect(owner.getByText(/is on the way/)).toBeVisible();
+
   const farm = await (await browser.newContext()).newPage();
   await login(farm, logins['Wheaty Farms'].number, 'secret-123');
   const check = noConsoleErrors(farm);
+  await expect(farm.getByTestId('game-clock')).toContainText('Day');
   await farm.goto('/work');
   await farm.locator('[data-testid^="job-"]', { hasText: 'Count the crates' }).getByTestId('take-job').click();
   await expect(farm.getByRole('columnheader', { name: 'Crates' })).toBeVisible();

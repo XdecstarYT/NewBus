@@ -9,6 +9,7 @@ import * as work from '../services/work';
 import * as customers from '../services/customers';
 import * as contracts from '../services/contracts';
 import * as progress from '../services/progress';
+import * as ownerai from '../services/ownerai';
 import { aiAvailable, aiJson, aiStatus, AiError } from '../services/ai';
 import { audit, getSettings } from '../services/core';
 import * as zz from 'zod/v4';
@@ -53,8 +54,8 @@ route('POST', '/game/contracts', 'company', async (c) => {
       price: z.number().int().min(1).max(100_000_000),
       note: z.string().max(200).default(''),
       offeredTo: id.nullable().default(null),
-      acceptHours: z.number().min(0.25).max(168).default(12),
-      deliverHours: z.number().min(0.25).max(168).default(24),
+      acceptHours: z.number().min(1).max(720).default(12),
+      deliverHours: z.number().min(1).max(720).default(24),
     }),
     c.body,
   );
@@ -120,7 +121,7 @@ route('POST', '/owner/work/jobs', 'owner', async (c) => {
       templateId: id,
       slots: z.number().int().min(1).max(50).default(3),
       reward: z.number().int().min(1).max(1_000_000).optional(),
-      hours: z.number().min(0.25).max(336).default(24),
+      hours: z.number().min(1).max(720).default(24),
       clientName: z.string().max(40).optional(),
       clientEmoji: z.string().max(8).optional(),
       clientNote: z.string().max(300).optional(),
@@ -147,6 +148,50 @@ route('POST', '/owner/work/submissions/:id/ai-grade', 'owner', async (c) => {
   const g = await work.aiGrade(r.task, r.answers ?? {}, 9000).catch(aiFail);
   return { suggestion: g };
 });
+
+// ------------------------------------------------------------ Owner requests (company side)
+route('GET', '/game/requests', 'company', async (c) => ownerai.requestsFor(c.db, c.company.id));
+route('POST', '/game/requests/:id/pay', 'company', async (c) => tx(c, (db) => ownerai.answerRequest(db, c.account, c.company, c.params.id, true)));
+route('POST', '/game/requests/:id/decline', 'company', async (c) => tx(c, (db) => ownerai.answerRequest(db, c.account, c.company, c.params.id, false)));
+
+// ------------------------------------------------------------ Owner: AI clients + AI actions
+route('POST', '/owner/ai/client', 'owner', async (c) => {
+  const v = parse(
+    z.object({
+      companyId: id.nullable().default(null),
+      idea: z.string().max(1500).default(''),
+      slots: z.number().int().min(1).max(50).default(1),
+      reward: z.number().int().min(1).max(1_000_000).optional(),
+      hours: z.number().min(1).max(720).default(24),
+    }),
+    c.body,
+  );
+  if (v.idea.trim() && !(await aiOn(c.db))) throw badRequest('Writing a new job needs the AI. Add AIK in Netlify, or leave the idea empty to send a client with a ready-made job.', 'ai_unavailable');
+  const draft = await ownerai.draftClient(c.db, v).catch(aiFail);
+  return tx(c, (db) => ownerai.sendClient(db, c.account, v, draft));
+});
+const action = z.object({
+  kind: z.enum(ownerai.ACTION_KINDS),
+  target: id,
+  amount: z.number().int().min(0).max(100_000_000).default(0),
+  item: z.string().max(40).default(''),
+  qty: z.number().int().min(0).max(100_000).default(0),
+  title: z.string().max(100).default(''),
+  message: z.string().max(500).default(''),
+  dueHours: z.number().min(1).max(720).default(24),
+  templateId: z.string().max(80).default(''),
+});
+route('POST', '/owner/ai/plan', 'owner', async (c) => {
+  const v = parse(z.object({ instruction: z.string().min(3).max(1500) }), c.body);
+  if (!(await aiOn(c.db))) throw badRequest('AI is off. Add your key as AIK in Netlify (and keep AI switched on).', 'ai_unavailable');
+  return ownerai.planActions(c.db, v.instruction).catch(aiFail);
+});
+route('POST', '/owner/ai/run', 'owner', async (c) => {
+  const v = parse(z.object({ actions: z.array(action).min(1).max(20), aiWritten: z.boolean().default(true) }), c.body);
+  return tx(c, (db) => ownerai.runActions(db, c.account, v.actions, v.aiWritten));
+});
+route('GET', '/owner/requests', 'owner', async (c) => ownerai.allRequests(c.db));
+route('POST', '/owner/requests/:id/cancel', 'owner', async (c) => ownerai.cancelRequest(c.db, c.params.id));
 
 // ------------------------------------------------------------ Owner: AI
 route('GET', '/owner/ai', 'owner', async (c) => ({ ...aiStatus(), on: await aiOn(c.db), enabled: (await getSettings(c.db)).aiEnabled }));

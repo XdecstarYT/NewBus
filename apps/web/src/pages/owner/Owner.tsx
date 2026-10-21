@@ -181,12 +181,12 @@ export function OwnerEconomy() {
             {num('startingGrant', 'Starting grant (BT)')}
             {num('unionCreateCost', 'Found a union (BT)')}
             {num('courtFilingPct', 'Court filing fee %')}
-            {num('hearingMinutes', 'Minutes to hearing')}
-            {num('appealHours', 'Appeal window (h)')}
-            {num('nominateMinutes', 'Election nominations (min)')}
-            {num('voteMinutes', 'Election voting (min)')}
-            {num('unionTermDays', 'Union term (days)')}
-            {num('lawVoteHours', 'Law voting (h)')}
+            {num('hearingMinutes', 'Game minutes to hearing')}
+            {num('appealHours', 'Appeal window (game h)')}
+            {num('nominateMinutes', 'Election nominations (game min)')}
+            {num('voteMinutes', 'Election voting (game min)')}
+            {num('unionTermDays', 'Union term (game days)')}
+            {num('lawVoteHours', 'Law voting (game h)')}
           </div>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={settings.unionTaxDiscount} onChange={(e) => setS({ ...settings, unionTaxDiscount: e.target.checked })} /> Union members trade at half tax</label>
           <button className="btn-primary self-start" disabled={!s} onClick={() => save.mutate(undefined)}>Save rules</button>
@@ -250,7 +250,7 @@ function Bench({ d, cos }: { d: any; cos: any[] }) {
   return (
     <div className="grid lg:grid-cols-[1fr_320px] gap-4">
       <div className="flex flex-col gap-3">
-        <div className="card flex flex-col gap-1"><div className="h3">🔨 Waiting for your ruling</div><p className="text-xs muted">You are the judge. If you don't rule within 2 hours of the hearing, the evidence decides.</p>{!waiting.length ? <p className="text-sm muted">Nothing on the bench.</p> : waiting.map((c: any) => <CaseRow key={c.id} c={c} to={`/owner/justice/cases/${c.id}`} />)}</div>
+        <div className="card flex flex-col gap-1"><div className="h3">🔨 Waiting for your ruling</div><p className="text-xs muted">You are the judge. If you don't rule within a game day (2 real hours) of the hearing, the evidence decides.</p>{!waiting.length ? <p className="text-sm muted">Nothing on the bench.</p> : waiting.map((c: any) => <CaseRow key={c.id} c={c} to={`/owner/justice/cases/${c.id}`} />)}</div>
         <div className="card flex flex-col gap-1"><div className="h3">📁 All cases</div>{!rest.length ? <p className="text-sm muted">None yet.</p> : rest.map((c: any) => <CaseRow key={c.id} c={c} to={`/owner/justice/cases/${c.id}`} />)}</div>
       </div>
       <div className="card flex flex-col gap-2">
@@ -284,9 +284,9 @@ export function OwnerCase() {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {c.plaintiffId && <label className="label">Damages<input type="number" className="input" min={0} value={rem.damages} onChange={num('damages')} /></label>}
             <label className="label">Fine<input type="number" className="input" min={0} value={rem.fine} onChange={num('fine')} /></label>
-            <label className="label">Freeze (h)<input type="number" className="input" min={0} value={rem.freezeHours} onChange={num('freezeHours')} /></label>
+            <label className="label">Freeze (game h)<input type="number" className="input" min={0} value={rem.freezeHours} onChange={num('freezeHours')} /></label>
             <label className="label">Suspend<select className="input" value={rem.suspend} onChange={(e) => setRem({ ...rem, suspend: e.target.value })}><option value="">nothing</option>{(Object.entries(FEATURES) as Array<[Feature, any]>).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}</select></label>
-            <label className="label">For (h)<input type="number" className="input" min={0} value={rem.suspendHours} onChange={num('suspendHours')} /></label>
+            <label className="label">For (game h)<input type="number" className="input" min={0} value={rem.suspendHours} onChange={num('suspendHours')} /></label>
           </div>
           <input className="input" maxLength={500} value={reasoning} onChange={(e) => setReasoning(e.target.value)} placeholder="Reasoning (shown to the parties and in the news)" aria-label="Reasoning" />
           <div className="flex gap-2"><button className="btn-good" onClick={() => decide.mutate('plaintiff')}>Rule for the plaintiff</button><button className="btn-ghost" onClick={() => decide.mutate('defendant')}>Rule for the defendant</button></div>
@@ -320,7 +320,7 @@ function Audits({ d, cos }: { d: any; cos: any[] }) {
               {f.flags.length ? <ul className="text-sm list-disc pl-5">{f.flags.map((x: string) => <li key={x}>{x}</li>)}</ul> : <p className="text-sm">No red flags. 🧼</p>}
               <div className="flex gap-2 flex-wrap items-end">
                 <label className="label">Fine<input type="number" className="input !w-28" min={0} value={v.fine} onChange={(e) => set({ fine: Math.max(0, Math.floor(Number(e.target.value) || 0)) })} /></label>
-                <label className="label">Freeze (h)<input type="number" className="input !w-20" min={0} value={v.freezeHours} onChange={(e) => set({ freezeHours: Math.max(0, Number(e.target.value) || 0) })} /></label>
+                <label className="label">Freeze (game h)<input type="number" className="input !w-20" min={0} value={v.freezeHours} onChange={(e) => set({ freezeHours: Math.max(0, Number(e.target.value) || 0) })} /></label>
                 <label className="label flex-1">Note<input className="input" maxLength={300} value={v.note} onChange={(e) => set({ note: e.target.value })} /></label>
               </div>
               <div className="flex gap-2 flex-wrap">
@@ -360,7 +360,7 @@ function Sanctions({ d, cos }: { d: any; cos: any[] }) {
         <Pick cos={cos} value={f.companyId} onChange={(v) => setF({ ...f, companyId: v })} label="Company" />
         <select className="input" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value })} aria-label="Sanction"><option value="freeze">🧊 Freeze assets (no spending)</option><option value="suspend">⛔ Suspend a feature</option></select>
         {f.kind === 'suspend' && <select className="input" value={f.feature} onChange={(e) => setF({ ...f, feature: e.target.value })} aria-label="Feature">{(Object.entries(FEATURES) as Array<[Feature, any]>).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}</select>}
-        <label className="label">Hours<input type="number" className="input" min={1} value={f.hours} onChange={(e) => setF({ ...f, hours: Math.max(1, Number(e.target.value) || 1) })} /></label>
+        <label className="label">Game hours<input type="number" className="input" min={1} value={f.hours} onChange={(e) => setF({ ...f, hours: Math.max(1, Number(e.target.value) || 1) })} /></label>
         <label className="label">Reason<input className="input" maxLength={200} value={f.reason} onChange={(e) => setF({ ...f, reason: e.target.value })} /></label>
         <button className="btn-bad" disabled={!f.companyId || f.reason.trim().length < 2} onClick={() => add.mutate(undefined)}>Impose</button>
       </div>

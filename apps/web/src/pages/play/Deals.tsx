@@ -6,6 +6,7 @@ import { formatBits, itemLabel, lineText } from '../../lib/game';
 import { sfx } from '../../lib/sound';
 import { useStore } from '../../lib/store';
 import { EmptyState, LoadingJoke, Modal, ProgressBar, Tabs, timeAgo, timeLeft } from '../../components/ui';
+import { formatGameDuration } from '@dw/shared/live';
 import { useMe2 } from '../Layout';
 
 // ============================================================ AI customers
@@ -142,8 +143,8 @@ export function Contracts() {
             <label className="label">Quantity<input type="number" className="input" min={1} value={f.qty} onChange={(e) => setF({ ...f, qty: Math.max(1, Math.floor(Number(e.target.value) || 1)) })} /></label>
             <label className="label">Total price (BT)<input type="number" className="input" min={1} value={f.price} onChange={(e) => setF({ ...f, price: Math.max(1, Math.floor(Number(e.target.value) || 1)) })} /></label>
             <label className="label">Offer to<select className="input" value={f.offeredTo} onChange={(e) => setF({ ...f, offeredTo: e.target.value })}><option value="">Anyone</option>{(companies.data ?? []).filter((c) => c.id !== id).map((c) => <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>)}</select></label>
-            <label className="label">Hours to accept<input type="number" className="input" min={1} max={168} value={f.acceptHours} onChange={(e) => setF({ ...f, acceptHours: Number(e.target.value) || 1 })} /></label>
-            <label className="label">Then hours to deliver<input type="number" className="input" min={1} max={168} value={f.deliverHours} onChange={(e) => setF({ ...f, deliverHours: Number(e.target.value) || 1 })} /></label>
+            <label className="label">Game hours to accept<input type="number" className="input" min={1} max={168} value={f.acceptHours} onChange={(e) => setF({ ...f, acceptHours: Number(e.target.value) || 1 })} /></label>
+            <label className="label">Then game hours to deliver<input type="number" className="input" min={1} max={168} value={f.deliverHours} onChange={(e) => setF({ ...f, deliverHours: Number(e.target.value) || 1 })} /></label>
           </div>
           <label className="label">Note<input className="input" maxLength={200} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder="For our new bakery opening!" /></label>
           <div className="text-sm">You lock <b>{formatBits(f.price)}</b> now ({Math.round(f.price / f.qty)} BT each). It comes back if nobody delivers.</div>
@@ -189,7 +190,7 @@ export function Quests() {
           </div>
         ))}
       </div>
-      <p className="text-xs muted">New quests every day at midnight (UTC).</p>
+      <p className="text-xs muted">New quests every game day (every 2 real hours).</p>
       <div className="h2">🏅 Company badges ({d.badges.earned} / {d.badges.total})</div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {d.badges.badges.map((b: any) => (
@@ -200,6 +201,41 @@ export function Quests() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ============================================================ Owner requests
+/** Bits or goods the Owner asked this company for. Only the admin can answer. */
+export function OwnerRequests() {
+  const me = useMe2();
+  const q = useApi<any[]>(['requests'], '/game/requests', { refetchInterval: 30_000 });
+  const answer = useAction(({ id, a }: { id: string; a: 'pay' | 'decline' }) => POST(`/game/requests/${id}/${a}`), {
+    invalidate: [['requests'], ['home'], ['me']],
+    success: 'Answer sent to the Owner.',
+  });
+  const open = (q.data ?? []).filter((r) => r.status === 'pending' && r.dueAt > Date.now());
+  if (!open.length) return null;
+  return (
+    <div className="card !bg-amber-50 flex flex-col gap-2" data-testid="owner-requests">
+      <div className="h3">📬 The Owner is asking</div>
+      {open.map((r) => (
+        <div key={r.id} className="flex flex-wrap items-center gap-2 border-t border-ink/10 pt-2">
+          <div className="flex-1 min-w-[12rem]">
+            <b>{r.title}</b>
+            {r.message && <div className="text-sm italic">"{r.message}"</div>}
+            <div className="text-xs muted">{r.kind === 'bits' ? formatBits(r.amount) : `${r.qty}× ${itemLabel(r.item)}`} · answer within {formatGameDuration(r.dueAt - Date.now())} ({timeLeft(r.dueAt)})</div>
+          </div>
+          {me.account.role === 'ADMIN' ? (
+            <>
+              <button className="btn-good btn-sm" disabled={answer.isPending} onClick={() => answer.mutate({ id: r.id, a: 'pay' })}>{r.kind === 'bits' ? `💸 Pay ${r.amount} BT` : '📦 Hand over'}</button>
+              <button className="btn-ghost btn-sm" disabled={answer.isPending} onClick={() => answer.mutate({ id: r.id, a: 'decline' })}>🙅 Decline</button>
+            </>
+          ) : (
+            <span className="text-xs muted">Your company admin can answer.</span>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

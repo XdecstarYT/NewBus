@@ -1,8 +1,9 @@
 /** Daily quests, personal skill levels and achievements. */
 import { and, eq, inArray, sql } from 'drizzle-orm';
+import { gameDayKey } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import type { Account, Company } from '../http/router';
-import { dayKey } from '../lib/time';
+import { clock } from '../lib/time';
 import { badRequest, conflict, notFound } from '../lib/errors';
 import { getSettings, hint, topics } from './core';
 import { fromTreasury, W } from './money';
@@ -49,7 +50,7 @@ function pickFor(accountId: string, day: string) {
 }
 
 async function ensureToday(db: Db, accountId: string) {
-  const day = dayKey();
+  const day = gameDayKey(clock.now());
   const have = await db.select().from(schema.quests).where(and(eq(schema.quests.accountId, accountId), eq(schema.quests.day, day)));
   if (have.length) return have;
   const rows = pickFor(accountId, day).map((q) => ({ accountId, day, questId: q.id, kind: q.kind, target: q.target, progress: 0, claimed: false }));
@@ -64,7 +65,7 @@ export async function bumpQuest(db: Db, accountId: string | null | undefined, ki
   await db
     .update(schema.quests)
     .set({ progress: sql`least(${schema.quests.target}, ${schema.quests.progress} + ${n})` })
-    .where(and(eq(schema.quests.accountId, accountId), eq(schema.quests.day, dayKey()), eq(schema.quests.kind, kind)));
+    .where(and(eq(schema.quests.accountId, accountId), eq(schema.quests.day, gameDayKey(clock.now())), eq(schema.quests.kind, kind)));
 }
 
 export async function questsView(db: Db, account: Account) {
@@ -81,7 +82,7 @@ export async function questsView(db: Db, account: Account) {
 }
 
 export async function claimQuest(db: Db, account: Account, company: Company, questId: string) {
-  const r = (await db.select().from(schema.quests).where(and(eq(schema.quests.accountId, account.id), eq(schema.quests.day, dayKey()), eq(schema.quests.questId, questId))).for('update'))[0];
+  const r = (await db.select().from(schema.quests).where(and(eq(schema.quests.accountId, account.id), eq(schema.quests.day, gameDayKey(clock.now())), eq(schema.quests.questId, questId))).for('update'))[0];
   if (!r) throw notFound('No such quest today.');
   if (r.claimed) throw conflict('Already claimed.');
   if (r.progress < r.target) throw badRequest('Not finished yet!');

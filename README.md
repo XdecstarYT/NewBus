@@ -13,6 +13,8 @@ A cartoon office economy for you and your friends. **Everything is made and done
 
 You are the **Owner** (login `01` / `Diddy`; the game makes you pick a new password the first time). You create the companies and logins, hold the Treasury, set the tax, audit people, judge court cases and propose laws.
 
+**Game time runs 12× faster:** 1 real hour = 12 game hours, so a game day lasts 2 real hours (the clock is at the top of every page). Deadlines, elections, court dates, law votes, daily quests and union dues all follow game time. Office-job timers and Energy refills stay in real time, so you still get real minutes to type and Energy can't refill instantly.
+
 Bits are pretend money. Nothing here is real money, crypto or securities.
 
 ---
@@ -61,7 +63,7 @@ On your home Wi-Fi: run `npm run play` and have friends open `http://<your-compu
 | 💰 Economy | Mint or burn Treasury Bits, and set the rules (sales tax, starting grant, election and court timings, union tax discount). **New season** wipes the economy and starts everyone fresh. |
 | 🏛️ Justice & laws | **Court:** you are the judge (damages, fines, asset freezes, feature suspensions). The State can sue too, and if you don't rule within 2 hours of a hearing, the evidence decides. **Tax audits:** see untaxed transfers and fine. **Sanctions.** **Laws:** sales tax, stimulus, Energy boost; companies vote and you can sign or veto. **Unions:** dissolve. |
 | 💼 Office Work | **Post a job** from 67 templates (or your own): set spots, pay, how long it stays open, the client's name and note, and whether everyone or one company can take it. **My templates:** write your own with reference data (paste notes or CSV; CSV shows as a table), answer boxes, and grading: ✅ instant check (you give the right answers), 🤖 AI graded (you give a rubric) or 👑 graded by you. **AI template maker:** describe a job and the AI drafts the whole template for you to check and save. **To grade:** score hand-ins yourself (or ask the AI for a suggestion). |
-| 🤖 AI | Is the AI key working, test it, switch AI on or off, how many AI client jobs per day, how many customers at once, what customers pay, the daily quest reward, and whether the Treasury may print Bits for these rewards. |
+| 🤖 AI | **AI actions:** type an order in plain English ("request 200 bits from every company for the new road") and the AI turns it into actions: Bit or goods requests (companies pay or decline in time), grants, fines, messages, news and client jobs. You check and edit everything before pressing Send. **Send an AI client** to one company (or everyone) with a job the AI writes from your idea, or a ready-made one. **Your requests:** who paid, declined or ran out of time. Also: is the AI key working, test it, switch AI on or off, how many AI client jobs per day, how many customers at once, what customers pay, the daily quest reward, and whether the Treasury may print Bits for these rewards. |
 | 🎁 QR cards | Print real-life reward cards. Bits come out of the Treasury when someone scans one. |
 | 💬 Chat | Delete messages as the Owner. |
 
@@ -71,12 +73,13 @@ On your home Wi-Fi: run `npm run play` and have friends open `http://<your-compu
 
 1. Log in with the account number and password the Owner gave you, then pick your own password.
 2. **🏢 Office:** work shifts with your Energy. Each recipe shows what it takes and makes. Tools add +50%. Eat food to refill Energy.
-3. **💼 Office Work:** take a job, read the brief and the reference data, fill in the answers and hand it in before the timer ends. Pay depends on your score. **🧑‍💼 Customers:** hand over the goods they want for a premium (one haggle each). **📝 Contracts:** promise goods by a deadline. **🎯 Quests:** three new ones every day, plus badges.
-4. **📈 Market:** post buy or sell orders. A trade happens when a buyer's price meets a seller's.
-5. **🧾 My shop & POS:** set shop prices. At a real table, ring up a sale and your friend scans the QR (or types the code) under **💳 Pay**.
-6. **🏗️ Build:** new facilities and upgrades need planks and steel, so somebody has to make them.
-7. **✊ Union**, **🏛️ Town Hall**, **⚖️ Court:** politics, laws and lawsuits, all between real players.
-8. **👥 Team:** company admins can add logins for more friends. Each friend has their own Energy.
+3. **📬 Owner requests** appear at the top of the 🏢 Office page: the company admin pays or declines before the deadline.
+4. **💼 Office Work:** take a job, read the brief and the reference data, fill in the answers and hand it in before the timer ends. Pay depends on your score. **🧑‍💼 Customers:** hand over the goods they want for a premium (one haggle each). **📝 Contracts:** promise goods by a deadline. **🎯 Quests:** three new ones every game day, plus badges.
+5. **📈 Market:** post buy or sell orders. A trade happens when a buyer's price meets a seller's.
+6. **🧾 My shop & POS:** set shop prices. At a real table, ring up a sale and your friend scans the QR (or types the code) under **💳 Pay**.
+7. **🏗️ Build:** new facilities and upgrades need planks and steel, so somebody has to make them.
+8. **✊ Union**, **🏛️ Town Hall**, **⚖️ Court:** politics, laws and lawsuits, all between real players.
+9. **👥 Team:** company admins can add logins for more friends. Each friend has their own Energy.
 
 ---
 

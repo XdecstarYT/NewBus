@@ -7,6 +7,7 @@ import { formatBits, item, recipeText } from '../../lib/game';
 import { sfx } from '../../lib/sound';
 import { useStore } from '../../lib/store';
 import { EmptyState, LoadingJoke, ProgressBar, Toggle } from '../../components/ui';
+import { OwnerRequests } from './Deals';
 import { useMe2 } from '../Layout';
 
 const INV = [['home'], ['me']];
@@ -22,6 +23,7 @@ export function Office() {
   const tools = (inv.tools ?? 0) * TOOL_USES + d.company.toolUses;
   return (
     <div className="flex flex-col gap-4">
+      <OwnerRequests />
       <div className="flex items-end gap-3 flex-wrap">
         <div className="flex-1">
           <h1 className="h1">{d.company.emoji} {d.company.name}</h1>
