@@ -15,7 +15,9 @@ Bits are pretend money. Nothing here is real money, crypto or securities.
 
 ## Put it online: Netlify + Supabase (free)
 
-Netlify hosts the pages and runs the game's API as serverless functions. Supabase holds all the data and sends live updates. You need **one setting**.
+Netlify hosts the pages and runs the game's API as serverless functions. Supabase holds all the data and sends live updates.
+
+**There is nothing to set up:** the game connects to its Supabase project with a built-in, game-only database login (it can only touch the game's tables). Just open your Netlify site and log in with `01` / `Diddy`. The steps below are only needed if you want to point the game at a different database.
 
 1. **Get your database address from Supabase.** Open your project (`digital-workforce`) → **Connect** (top bar) → **Transaction pooler**. Copy the connection string: it looks like `postgresql://postgres.xxxx:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres`. Put your database password where it says `[YOUR-PASSWORD]`. (Forgot it? Project Settings → Database → Reset database password.)
 2. **Give it to Netlify.** Your site → **Site configuration → Environment variables → Add a variable**: key `DATABASE_URL`, value = that string.
