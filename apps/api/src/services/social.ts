@@ -2,6 +2,7 @@
 import { and, desc, eq, gt, lt, sql } from 'drizzle-orm';
 import { ITEMS, type ItemId } from '@dw/shared/live';
 import { schema, type Db } from '../db';
+import { bumpQuest } from './progress';
 import type { Account, Company } from '../http/router';
 import { clock, MINUTE } from '../lib/time';
 import { badRequest, forbidden } from '../lib/errors';
@@ -45,6 +46,7 @@ export async function send(db: Db, account: Account, company: Company | null, ch
   const name = company ? `${company.emoji} ${account.name} (${company.name})` : account.role === 'OWNER' ? `👑 ${account.name}` : account.name;
   const row = (await db.insert(schema.chat).values({ channel, accountId: account.id, companyId: company?.id ?? null, name, text: t, createdAt: clock.now() }).returning())[0];
   await ping(db, channel);
+  await bumpQuest(db, account.id, 'chat');
   return row;
 }
 

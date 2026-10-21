@@ -447,3 +447,129 @@ export const sanctions = live.table(
   },
   (t) => [index('sanctions_company_idx').on(t.companyId, t.until)],
 );
+
+// ---------------------------------------------------------------- office work
+/** Templates the Owner wrote (or had the AI write). Built-in ones live in the shared catalogue. */
+export const workTemplates = live.table('work_templates', {
+  id: text('id').primaryKey(),
+  category: text('category').notNull(),
+  title: text('title').notNull(),
+  emoji: text('emoji').notNull(),
+  brief: text('brief').notNull(),
+  reference: text('reference').notNull().default(''),
+  fields: jsonb('fields').$type<Array<{ key: string; label: string; type: string; options?: string[]; placeholder?: string }>>().notNull(),
+  grading: text('grading').notNull(), // auto | ai | owner
+  answers: jsonb('answers').$type<Record<string, string | number>>(),
+  rubric: text('rubric').notNull().default(''),
+  reward: integer('reward').notNull(),
+  energy: integer('energy').notNull(),
+  minutes: integer('minutes').notNull(),
+  difficulty: integer('difficulty').notNull().default(1),
+  source: text('source').notNull().default('owner'), // owner | ai
+  archived: boolean('archived').notNull().default(false),
+  createdAt: ms('created_at').notNull(),
+});
+
+/** A posted job: a template snapshot, a client, a reward per worker and a number of slots. */
+export const jobs = live.table(
+  'jobs',
+  {
+    id: text('id').primaryKey(),
+    templateId: text('template_id').notNull(),
+    task: jsonb('task').$type<Record<string, unknown>>().notNull(),
+    clientName: text('client_name').notNull(),
+    clientEmoji: text('client_emoji').notNull(),
+    clientNote: text('client_note').notNull().default(''),
+    reward: integer('reward').notNull(),
+    slots: integer('slots').notNull(),
+    taken: integer('taken').notNull().default(0),
+    targetCompanyId: text('target_company_id'),
+    status: text('status').notNull(), // open | closed
+    postedBy: text('posted_by').notNull(), // owner | auto
+    funded: integer('funded').notNull().default(0),
+    createdAt: ms('created_at').notNull(),
+    expiresAt: ms('expires_at').notNull(),
+  },
+  (t) => [index('jobs_status_idx').on(t.status, t.createdAt)],
+);
+
+export const submissions = live.table(
+  'submissions',
+  {
+    id: text('id').primaryKey(),
+    jobId: text('job_id').notNull(),
+    accountId: text('account_id').notNull(),
+    companyId: text('company_id').notNull(),
+    answers: jsonb('answers').$type<Record<string, unknown>>(),
+    status: text('status').notNull(), // working | grading | graded | expired
+    score: integer('score'),
+    feedback: text('feedback'),
+    results: jsonb('results').$type<Record<string, boolean>>(),
+    payout: integer('payout').notNull().default(0),
+    gradedBy: text('graded_by'),
+    startedAt: ms('started_at').notNull(),
+    dueAt: ms('due_at').notNull(),
+    submittedAt: ms('submitted_at'),
+    gradedAt: ms('graded_at'),
+  },
+  (t) => [index('submissions_job_idx').on(t.jobId), index('submissions_account_idx').on(t.accountId, t.startedAt), index('submissions_status_idx').on(t.status)],
+);
+
+// ---------------------------------------------------------------- AI customers
+export const customerOrders = live.table(
+  'customer_orders',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    emoji: text('emoji').notNull(),
+    persona: text('persona').notNull().default(''),
+    message: text('message').notNull(),
+    lines: jsonb('lines').$type<Array<{ item: string; qty: number }>>().notNull(),
+    pay: integer('pay').notNull(),
+    status: text('status').notNull(), // open | filled | expired
+    filledBy: text('filled_by'),
+    haggledBy: jsonb('haggled_by').$type<string[]>().notNull().default([]),
+    aiWritten: boolean('ai_written').notNull().default(false),
+    createdAt: ms('created_at').notNull(),
+    expiresAt: ms('expires_at').notNull(),
+    filledAt: ms('filled_at'),
+  },
+  (t) => [index('customer_orders_status_idx').on(t.status, t.createdAt)],
+);
+
+// ---------------------------------------------------------------- player contracts
+export const contracts = live.table(
+  'contracts',
+  {
+    id: text('id').primaryKey(),
+    buyerId: text('buyer_id').notNull(),
+    sellerId: text('seller_id'), // who accepted (or who it was offered to)
+    offeredTo: text('offered_to'),
+    item: text('item').notNull(),
+    qty: integer('qty').notNull(),
+    price: integer('price').notNull(), // total
+    note: text('note').notNull().default(''),
+    status: text('status').notNull(), // open | accepted | delivered | expired | cancelled | breached
+    createdAt: ms('created_at').notNull(),
+    acceptBy: ms('accept_by').notNull(),
+    deliverBy: ms('deliver_by').notNull(),
+    acceptedAt: ms('accepted_at'),
+    doneAt: ms('done_at'),
+  },
+  (t) => [index('contracts_status_idx').on(t.status), index('contracts_buyer_idx').on(t.buyerId), index('contracts_seller_idx').on(t.sellerId)],
+);
+
+// ---------------------------------------------------------------- daily quests
+export const quests = live.table(
+  'quests',
+  {
+    accountId: text('account_id').notNull(),
+    day: text('day').notNull(),
+    questId: text('quest_id').notNull(),
+    kind: text('kind').notNull(),
+    target: integer('target').notNull(),
+    progress: integer('progress').notNull().default(0),
+    claimed: boolean('claimed').notNull().default(false),
+  },
+  (t) => [primaryKey({ columns: [t.accountId, t.day, t.questId] })],
+);

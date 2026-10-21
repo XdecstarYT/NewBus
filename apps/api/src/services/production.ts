@@ -20,6 +20,7 @@ import {
   type ItemId,
 } from '@dw/shared/live';
 import { schema, type Db } from '../db';
+import { bumpQuest, skillBonus } from './progress';
 import type { Account, Company } from '../http/router';
 import { clock } from '../lib/time';
 import { badRequest, conflict, notFound } from '../lib/errors';
@@ -61,7 +62,7 @@ export async function work(db: Db, account: Account, company: Company, o: { faci
     toolUses = toolUses + needed * TOOL_USES - toolBatches;
   }
 
-  const mult = levelOutput(fac.level);
+  const mult = levelOutput(fac.level) * (1 + skillBonus(account.xp));
   const output: Record<string, number> = {};
   for (const [item, n] of Object.entries(recipe.outputs) as Array<[ItemId, number]>) {
     const qty = Math.floor(n * mult * (batches + toolBatches * TOOL_BONUS) + 1e-9);
@@ -73,8 +74,9 @@ export async function work(db: Db, account: Account, company: Company, o: { faci
   await db.update(schema.accounts).set({ xp: sql`${schema.accounts.xp} + ${energy}` }).where(eq(schema.accounts.id, account.id));
   await db.update(schema.facilities).set({ batches: sql`${schema.facilities.batches} + ${batches}` }).where(and(eq(schema.facilities.companyId, company.id), eq(schema.facilities.type, o.facility)));
   await db.insert(schema.workLog).values({ companyId: company.id, accountId: account.id, facility: o.facility, recipe: recipe.id, batches, output, createdAt: now });
+  await bumpQuest(db, account.id, 'batches', batches);
   await hint(db, topics.company(company.id), { t: 'stock' });
-  return { output, energySpent: energy, toolBatches };
+  return { output, energySpent: energy, toolBatches, skillBonusPct: Math.round(skillBonus(account.xp) * 100) };
 }
 
 /** Eat food from the company pantry to get Energy back. */
@@ -84,6 +86,7 @@ export async function eat(db: Db, account: Account, company: Company, item: stri
   const n = Math.max(1, Math.min(20, Math.floor(qty)));
   await takeItem(db, company.id, item, n);
   const energy = await gainEnergy(db, account, company, food * n);
+  await bumpQuest(db, account.id, 'eat', n);
   await hint(db, topics.company(company.id), { t: 'stock' });
   return { energy: Math.floor(energy) };
 }

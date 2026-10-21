@@ -31,6 +31,9 @@ const REFRESH: Record<string, string[][]> = {
   court: [['court'], ['case']],
   chat: [['chat']],
   pos: [['shop'], ['home'], ['me']],
+  jobs: [['work'], ['owner', 'work']],
+  customers: [['customers']],
+  contracts: [['contracts']],
 };
 
 let client: ReturnType<typeof createClient> | null = null;

@@ -15,6 +15,9 @@ import { Shops, Storefront, Pay } from './pages/play/Shops';
 import { Send, Team, Redeem, Settings } from './pages/play/Company';
 import { Chat, News, Leaderboard } from './pages/play/Social';
 import { Unions, UnionPage, TownHall, Court, CaseDetail } from './pages/play/Politics';
+import { WorkBoard, Workspace } from './pages/play/Work';
+import { Customers, Contracts, Quests } from './pages/play/Deals';
+import { OwnerWork, OwnerAI } from './pages/owner/OwnerWork';
 import { OwnerOverview, OwnerCompanies, OwnerCompany, OwnerEconomy, OwnerJustice, OwnerCase, OwnerCodes } from './pages/owner/Owner';
 
 /** Apply accessibility / theme prefs to <html>. */
@@ -47,6 +50,11 @@ function Shell() {
         {me.company && (
           <>
             <Route path="/office" element={<Office />} />
+            <Route path="/work" element={<WorkBoard />} />
+            <Route path="/work/:id" element={<Workspace />} />
+            <Route path="/customers" element={<Customers />} />
+            <Route path="/contracts" element={<Contracts />} />
+            <Route path="/quests" element={<Quests />} />
             <Route path="/market" element={<Market />} />
             <Route path="/market/:item" element={<Market />} />
             <Route path="/shop" element={<MyShop />} />
@@ -74,6 +82,8 @@ function Shell() {
             <Route path="/owner/justice" element={<OwnerJustice />} />
             <Route path="/owner/justice/cases/:id" element={<OwnerCase />} />
             <Route path="/owner/codes" element={<OwnerCodes />} />
+            <Route path="/owner/work" element={<OwnerWork />} />
+            <Route path="/owner/ai" element={<OwnerAI />} />
           </>
         )}
         <Route path="/chat" element={<Chat />} />

@@ -71,6 +71,12 @@ route('PATCH', '/owner/settings', 'owner', async (c) => {
       voteMinutes: z.number().min(1).max(10_080).optional(),
       unionTermDays: z.number().min(1).max(60).optional(),
       lawVoteHours: z.number().min(1).max(336).optional(),
+      mintForWork: z.boolean().optional(),
+      autoJobsPerDay: z.number().int().min(0).max(100).optional(),
+      customersOpen: z.number().int().min(0).max(30).optional(),
+      customerPayPct: z.number().int().min(50).max(500).optional(),
+      questReward: z.number().int().min(0).max(100_000).optional(),
+      aiEnabled: z.boolean().optional(),
     }),
     c.body,
   );

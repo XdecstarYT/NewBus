@@ -3,4 +3,5 @@ import './routes/auth';
 import './routes/game';
 import './routes/politics';
 import './routes/owner';
+import './routes/work';
 export { handle } from './http/router';

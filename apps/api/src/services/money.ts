@@ -7,12 +7,14 @@ import { schema, type Db } from '../db';
 import { clock } from '../lib/time';
 import { newId } from '../lib/ids';
 import { GameError, insufficient } from '../lib/errors';
-import { assertNotFrozen } from './core';
+import { assertNotFrozen, getSettings } from './core';
 
 export const W = {
   mint: 'mint',
   treasury: 'treasury',
   escrow: 'escrow',
+  jobs: 'jobs',
+  contracts: 'contracts',
   company: (id: string) => `co:${id}`,
   union: (id: string) => `union:${id}`,
 };
@@ -80,4 +82,20 @@ export async function payUpTo(db: Db, from: string, to: string, amount: number, 
 export async function ledgerCheck(db: Db) {
   const r = await db.select({ s: sql<string>`coalesce(sum(${schema.wallets.balance}),0)` }).from(schema.wallets);
   return { sum: Number(r[0].s), supply: -(await balance(db, W.mint)) };
+}
+
+/**
+ * Pay something the game owes (office-work pay, AI customers, quest rewards) out of
+ * the Treasury. If the Treasury is short and the Owner allows it, new Bits top it up.
+ */
+export async function fromTreasury(db: Db, to: string, amount: number, kind: string, memo: string) {
+  const amt = Math.floor(amount);
+  if (amt <= 0) return 0;
+  const have = await balance(db, W.treasury);
+  if (have < amt) {
+    if (!(await getSettings(db)).mintForWork) throw new GameError(402, 'treasury_empty', 'The Treasury is empty. Ask the Owner to top it up.');
+    await pay(db, W.mint, W.treasury, amt - have, 'mint.auto', 'Treasury top-up for player rewards');
+  }
+  await pay(db, W.treasury, to, amt, kind, memo);
+  return amt;
 }

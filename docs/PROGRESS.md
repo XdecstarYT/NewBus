@@ -45,9 +45,17 @@ Design: [SPEC-v2.md](SPEC-v2.md). It's a player-run economy hosted on **Netlify 
   - 17 API tests on PGlite: economy, market, shops and POS, building, staff, unions, laws, audits, court, chat, season reset, ledger balance.
   - 2 browser tests: Owner setup, then two friends work, trade and pay at the register.
 
+- **Mega update 2: office work and AI**
+  - Office work: 67 built-in templates in 18 categories (24 checked instantly, the rest AI-graded), Owner-made templates with reference data and three grading modes, an AI template maker, jobs with spots, timers and pay by score held in a Jobs wallet, an Owner review queue, and automatic jobs from AI clients.
+  - AI (key `AIK`): structured JSON calls with a short timeout and fallbacks. It grades written work (answers are wrapped as data), plays customers and clients, decides haggles and drafts templates. Slow calls only happen in the scheduled function; players never wait more than a few seconds.
+  - AI customers: goods leave the economy and are paid by the Treasury at a premium.
+  - Contracts with escrow, delivery, expiry and breach (−5 prestige, can be sued).
+  - Daily quests, personal skill levels (+2% shift output per level, up to +40%), and company badges.
+  - Tests: 25 API tests (8 new) and 3 browser tests. Tables applied to Supabase as `0001_mega2`.
+
 ### Still open / ideas
 - Live updates use public broadcast channels whose names contain unguessable ids; the hints carry no game data. Private channels would need Supabase Auth.
-- Player-to-player loans and contracts with deadlines would fit well next.
+- Player-to-player loans would fit well next.
 - `packages/shared` still contains the v1 catalogue modules (unused by v2).
 
 ## Before: v1 (one always-on server)

@@ -6,6 +6,7 @@
 import { and, asc, desc, eq, gt, inArray, ne, sql } from 'drizzle-orm';
 import { ITEMS, ITEM_IDS, isItem, type ItemId } from '@dw/shared/live';
 import { schema, type Db } from '../db';
+import { bumpQuest } from './progress';
 import type { Account, Company } from '../http/router';
 import { clock, DAY } from '../lib/time';
 import { newId } from '../lib/ids';
@@ -26,7 +27,7 @@ export async function taxFor(db: Db, sellerId: string, buyerId: string, amount: 
 }
 
 /** Pay a seller: buyer wallet (or escrow) -> seller, minus tax -> Treasury. */
-export async function settleSale(db: Db, o: { from: string; sellerId: string; buyerId: string; item: string; qty: number; price: number; venue: 'market' | 'shop' | 'pos'; actorId?: string | null }) {
+export async function settleSale(db: Db, o: { from: string; sellerId: string; buyerId: string; item: string; qty: number; price: number; venue: 'market' | 'shop' | 'pos' | 'contract'; actorId?: string | null }) {
   const amount = o.qty * o.price;
   const tax = await taxFor(db, o.sellerId, o.buyerId, amount);
   await post(
@@ -39,6 +40,7 @@ export async function settleSale(db: Db, o: { from: string; sellerId: string; bu
     { memo: `${o.qty}× ${ITEMS[o.item as ItemId]?.name ?? o.item} @ ${o.price}`, actorId: o.actorId },
   );
   await db.insert(schema.trades).values({ id: newId('trd', 12), item: o.item, price: o.price, qty: o.qty, buyerId: o.buyerId, sellerId: o.sellerId, tax, venue: o.venue, createdAt: clock.now() });
+  if (o.venue === 'market' || o.venue === 'shop' || o.venue === 'pos') await bumpQuest(db, o.actorId, o.venue === 'market' ? 'trade' : 'sale');
   return tax;
 }
 

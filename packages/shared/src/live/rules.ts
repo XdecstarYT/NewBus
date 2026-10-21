@@ -57,5 +57,17 @@ export const DEFAULT_SETTINGS = {
   voteMinutes: 60,
   unionTermDays: 3,
   lawVoteHours: 24,
+  /** Office work and AI customers are paid by the Treasury; when it runs dry, new Bits top it up. */
+  mintForWork: true,
+  /** Office-work jobs posted automatically by AI clients each day. */
+  autoJobsPerDay: 6,
+  /** How many AI customer orders are open at once. */
+  customersOpen: 6,
+  /** AI customers pay this % of the going market price. */
+  customerPayPct: 130,
+  /** Bits for each finished daily quest. */
+  questReward: 40,
+  /** Use the AI (key in AIK) for grading, customers, clients and haggling. */
+  aiEnabled: true,
 };
 export type Settings = typeof DEFAULT_SETTINGS;

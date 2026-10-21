@@ -26,7 +26,11 @@ export function navFor(me: Me): NavItem[] {
   const play: NavItem[] = me.company
     ? [
         { to: '/office', label: 'Office', emoji: '🏢' },
+        { to: '/work', label: 'Office Work', emoji: '💼' },
+        { to: '/customers', label: 'Customers', emoji: '🧑‍💼' },
         { to: '/market', label: 'Market', emoji: '📈' },
+        { to: '/contracts', label: 'Contracts', emoji: '📝' },
+        { to: '/quests', label: 'Quests', emoji: '🎯' },
         { to: '/shops', label: 'Shops', emoji: '🛒' },
         { to: '/shop', label: 'My shop & POS', emoji: '🧾' },
         { to: '/pay', label: 'Pay', emoji: '💳' },
@@ -40,6 +44,8 @@ export function navFor(me: Me): NavItem[] {
     me.account.role === 'OWNER'
       ? [
           { to: '/owner', label: 'Overview', emoji: '👑' },
+          { to: '/owner/work', label: 'Office Work', emoji: '💼' },
+          { to: '/owner/ai', label: 'AI', emoji: '🤖' },
           { to: '/owner/companies', label: 'Companies', emoji: '🏢' },
           { to: '/owner/economy', label: 'Economy', emoji: '💰' },
           { to: '/owner/justice', label: 'Justice & laws', emoji: '🏛️' },
