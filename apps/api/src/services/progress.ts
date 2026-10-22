@@ -7,6 +7,7 @@ import { clock } from '../lib/time';
 import { badRequest, conflict, notFound } from '../lib/errors';
 import { getSettings, hint, topics } from './core';
 import { fromTreasury, W } from './money';
+import { questMultiplier } from './town';
 
 // ------------------------------------------------------------ skill levels
 /** Personal level from XP (work shifts, office jobs, quests). */
@@ -73,7 +74,7 @@ export async function questsView(db: Db, account: Account) {
   const s = await getSettings(db);
   return {
     quests: rows.map((r) => ({ ...r, ...QUESTS.find((q) => q.id === r.questId) })),
-    reward: s.questReward,
+    reward: Math.round(s.questReward * (await questMultiplier(db))),
     xp: account.xp,
     level: skillLevel(account.xp),
     nextLevelXp: 60 * skillLevel(account.xp) ** 2,
@@ -88,7 +89,7 @@ export async function claimQuest(db: Db, account: Account, company: Company, que
   if (r.progress < r.target) throw badRequest('Not finished yet!');
   const s = await getSettings(db);
   await db.update(schema.quests).set({ claimed: true }).where(and(eq(schema.quests.accountId, account.id), eq(schema.quests.day, r.day), eq(schema.quests.questId, questId)));
-  const paid = await fromTreasury(db, W.company(company.id), s.questReward, 'quest.reward', `Daily quest: ${questId}`);
+  const paid = await fromTreasury(db, W.company(company.id), Math.round(s.questReward * (await questMultiplier(db))), 'quest.reward', `Daily quest: ${questId}`);
   await addXp(db, account.id, 50);
   await hint(db, topics.company(company.id), { t: 'company' });
   return { paid, xp: 50 };

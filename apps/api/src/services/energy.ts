@@ -9,6 +9,7 @@ import type { Account, Company } from '../http/router';
 import { clock, HOUR } from '../lib/time';
 import { badRequest } from '../lib/errors';
 import { getValue } from './core';
+import { regenBonus } from './town';
 
 export interface EnergyStats {
   max: number;
@@ -23,7 +24,7 @@ export async function energyStats(db: Db, company: Company | null): Promise<Ener
   const lawBoost = boost && boost.until > clock.now() ? boost.value : 0;
   return {
     max: BASE_MAX_ENERGY + furniture * (ITEMS.furniture.install?.maxEnergy ?? 0),
-    regen: BASE_REGEN_PER_HOUR + uniforms * (ITEMS.uniform.install?.regen ?? 0) + lawBoost,
+    regen: BASE_REGEN_PER_HOUR + uniforms * (ITEMS.uniform.install?.regen ?? 0) + lawBoost + (await regenBonus(db)),
   };
 }
 

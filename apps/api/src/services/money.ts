@@ -15,6 +15,8 @@ export const W = {
   escrow: 'escrow',
   jobs: 'jobs',
   contracts: 'contracts',
+  loans: 'loans',
+  town: 'town',
   company: (id: string) => `co:${id}`,
   union: (id: string) => `union:${id}`,
 };

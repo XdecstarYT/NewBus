@@ -18,6 +18,8 @@ import { Unions, UnionPage, TownHall, Court, CaseDetail } from './pages/play/Pol
 import { WorkBoard, Workspace } from './pages/play/Work';
 import { Customers, Contracts, Quests } from './pages/play/Deals';
 import { OwnerWork, OwnerAI } from './pages/owner/OwnerWork';
+import { Town, Bank, Auctions } from './pages/play/Town';
+import { OwnerTown } from './pages/owner/OwnerTown';
 import { OwnerOverview, OwnerCompanies, OwnerCompany, OwnerEconomy, OwnerJustice, OwnerCase, OwnerCodes } from './pages/owner/Owner';
 
 /** Apply accessibility / theme prefs to <html>. */
@@ -55,6 +57,7 @@ function Shell() {
             <Route path="/customers" element={<Customers />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/quests" element={<Quests />} />
+            <Route path="/bank" element={<Bank />} />
             <Route path="/market" element={<Market />} />
             <Route path="/market/:item" element={<Market />} />
             <Route path="/shop" element={<MyShop />} />
@@ -84,8 +87,11 @@ function Shell() {
             <Route path="/owner/codes" element={<OwnerCodes />} />
             <Route path="/owner/work" element={<OwnerWork />} />
             <Route path="/owner/ai" element={<OwnerAI />} />
+            <Route path="/owner/town" element={<OwnerTown />} />
           </>
         )}
+        <Route path="/town" element={<Town />} />
+        <Route path="/auctions" element={<Auctions />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/news" element={<News />} />
         <Route path="/leaderboard" element={<Leaderboard />} />

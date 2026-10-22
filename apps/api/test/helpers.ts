@@ -4,6 +4,7 @@ import { handle } from '../src/handler';
 import { getDb, useDb, type Db } from '../src/db';
 import * as schema from '../src/db/schema';
 import { createCompany, ensureOwner } from '../src/services/accounts';
+import { patchSettings } from '../src/services/core';
 import { eq } from 'drizzle-orm';
 
 let started = false;
@@ -15,6 +16,8 @@ export async function setup(): Promise<Db> {
   }
   const db = await getDb();
   await ensureOwner(db);
+  // keep tests predictable: no random world events unless a test starts one
+  await patchSettings(db, { worldEvents: false });
   return db;
 }
 

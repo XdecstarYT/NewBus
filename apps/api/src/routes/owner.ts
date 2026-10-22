@@ -77,6 +77,7 @@ route('PATCH', '/owner/settings', 'owner', async (c) => {
       customerPayPct: z.number().int().min(50).max(500).optional(),
       questReward: z.number().int().min(0).max(100_000).optional(),
       aiEnabled: z.boolean().optional(),
+      worldEvents: z.boolean().optional(),
     }),
     c.body,
   );

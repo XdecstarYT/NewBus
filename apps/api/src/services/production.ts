@@ -21,6 +21,7 @@ import {
 } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import { bumpQuest, skillBonus } from './progress';
+import { outputBonusPct } from './town';
 import type { Account, Company } from '../http/router';
 import { clock } from '../lib/time';
 import { badRequest, conflict, notFound } from '../lib/errors';
@@ -62,7 +63,8 @@ export async function work(db: Db, account: Account, company: Company, o: { faci
     toolUses = toolUses + needed * TOOL_USES - toolBatches;
   }
 
-  const mult = levelOutput(fac.level) * (1 + skillBonus(account.xp));
+  const townPct = await outputBonusPct(db, o.facility);
+  const mult = levelOutput(fac.level) * (1 + skillBonus(account.xp)) * (1 + townPct / 100);
   const output: Record<string, number> = {};
   for (const [item, n] of Object.entries(recipe.outputs) as Array<[ItemId, number]>) {
     const qty = Math.floor(n * mult * (batches + toolBatches * TOOL_BONUS) + 1e-9);
@@ -76,7 +78,7 @@ export async function work(db: Db, account: Account, company: Company, o: { faci
   await db.insert(schema.workLog).values({ companyId: company.id, accountId: account.id, facility: o.facility, recipe: recipe.id, batches, output, createdAt: now });
   await bumpQuest(db, account.id, 'batches', batches);
   await hint(db, topics.company(company.id), { t: 'stock' });
-  return { output, energySpent: energy, toolBatches, skillBonusPct: Math.round(skillBonus(account.xp) * 100) };
+  return { output, energySpent: energy, toolBatches, skillBonusPct: Math.round(skillBonus(account.xp) * 100), townBonusPct: townPct };
 }
 
 /** Eat food from the company pantry to get Energy back. */

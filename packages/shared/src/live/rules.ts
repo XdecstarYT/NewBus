@@ -70,5 +70,7 @@ export const DEFAULT_SETTINGS = {
   questReward: 40,
   /** Use the AI (key in AIK) for grading, customers, clients and haggling. */
   aiEnabled: true,
+  /** A random world event every game day (weather, festivals, tax-free days...). */
+  worldEvents: true,
 };
 export type Settings = typeof DEFAULT_SETTINGS;

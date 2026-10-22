@@ -4,4 +4,5 @@ import './routes/game';
 import './routes/politics';
 import './routes/owner';
 import './routes/work';
+import './routes/town';
 export { handle } from './http/router';

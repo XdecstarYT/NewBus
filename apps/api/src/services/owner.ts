@@ -159,7 +159,8 @@ export async function redeem(db: Db, account: Account, company: Company, raw: st
 /** Wipe the economy and start everyone fresh (accounts, companies and unions stay). */
 export async function seasonReset(db: Db, actor: Account) {
   const s = await getSettings(db);
-  for (const t of [schema.inventory, schema.orders, schema.trades, schema.listings, schema.checkouts, schema.pickups, schema.ledger, schema.workLog, schema.wallets, schema.facilities, schema.sanctions, schema.rewardRedemptions, schema.jobs, schema.submissions, schema.customerOrders, schema.contracts, schema.quests, schema.ownerRequests]) await db.delete(t);
+  for (const t of [schema.inventory, schema.orders, schema.trades, schema.listings, schema.checkouts, schema.pickups, schema.ledger, schema.workLog, schema.wallets, schema.facilities, schema.sanctions, schema.rewardRedemptions, schema.jobs, schema.submissions, schema.customerOrders, schema.contracts, schema.quests, schema.ownerRequests, schema.loans, schema.auctions, schema.projects, schema.projectContribs]) await db.delete(t);
+  await db.delete(schema.settings).where(sql`${schema.settings.key} in ('boosts', 'event', 'energyBoost')`);
   const cos = await db.select().from(schema.companies);
   const now = clock.now();
   for (const c of cos) {

@@ -17,13 +17,16 @@ import { takeItem, qtyOf } from './stock';
 import { lastPrices } from './market';
 import { bumpQuest } from './progress';
 import { aiAvailable, aiJson } from './ai';
+import { customerBonusPct, wantedItems } from './town';
 
 const WANTED = ITEM_IDS.filter((i) => ITEMS[i].tier !== 'raw');
 const LIFETIME = 12 * GAME_HOUR;
 
-function randomLines() {
+function randomLines(hot: ItemId[] = []) {
   const n = 1 + Math.floor(Math.random() * 3);
   const picks = new Set<ItemId>();
+  // during events and festivals, customers often ask for the item everyone is talking about
+  if (hot.length && Math.random() < 0.6) picks.add(hot[Math.floor(Math.random() * hot.length)]);
   while (picks.size < n) picks.add(WANTED[Math.floor(Math.random() * WANTED.length)]);
   return [...picks].map((item) => {
     const p = ITEMS[item].basePrice;
@@ -35,8 +38,9 @@ function randomLines() {
 async function priceLines(db: Db, lines: Array<{ item: string; qty: number }>) {
   const last = await lastPrices(db);
   const s = await getSettings(db);
-  const base = lines.reduce((sum, l) => sum + l.qty * (last[l.item] ?? ITEMS[l.item as ItemId].basePrice), 0);
-  return Math.max(5, Math.round((base * s.customerPayPct) / 100));
+  let total = 0;
+  for (const l of lines) total += (l.qty * (last[l.item] ?? ITEMS[l.item as ItemId].basePrice) * (s.customerPayPct + (await customerBonusPct(db, l.item)))) / 100;
+  return Math.max(5, Math.round(total));
 }
 
 const say = (lines: Array<{ item: string; qty: number }>) => lines.map((l) => `${l.qty}× ${ITEMS[l.item as ItemId].emoji} ${ITEMS[l.item as ItemId].name}`).join(', ');
@@ -60,7 +64,8 @@ export async function sweepCustomers(db: Db, now: number, allowAi: boolean) {
   const want = allowAi ? s.customersOpen : Math.ceil(s.customersOpen / 2);
   const missing = Math.max(0, Math.min(10, want - open));
   if (!missing) return 0;
-  const orders = Array.from({ length: missing }, () => randomLines());
+  const hot = (await wantedItems(db)).filter((i) => WANTED.includes(i));
+  const orders = Array.from({ length: missing }, () => randomLines(hot));
   let people: z.infer<typeof Personas>['customers'] = [];
   if (allowAi && aiAvailable() && s.aiEnabled) {
     try {

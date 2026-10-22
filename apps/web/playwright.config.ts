@@ -20,6 +20,6 @@ export default defineConfig({
     url: `http://localhost:${PORT}/api/auth/me`,
     timeout: 180_000,
     reuseExistingServer: false,
-    env: { API_PORT: String(PORT), PGLITE_DIR: 'memory', OWNER_PASSWORD: 'Diddy' },
+    env: { API_PORT: String(PORT), PGLITE_DIR: 'memory', OWNER_PASSWORD: 'Diddy', DW_WORLD_EVENTS: 'off' },
   },
 });

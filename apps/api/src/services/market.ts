@@ -7,6 +7,7 @@ import { and, asc, desc, eq, gt, inArray, ne, sql } from 'drizzle-orm';
 import { ITEMS, ITEM_IDS, isItem, type ItemId } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import { bumpQuest } from './progress';
+import { taxFree } from './town';
 import type { Account, Company } from '../http/router';
 import { clock, DAY } from '../lib/time';
 import { newId } from '../lib/ids';
@@ -18,6 +19,7 @@ import { addItem, takeItem } from './stock';
 /** Sales tax on a sale; union members trading with each other pay half. */
 export async function taxFor(db: Db, sellerId: string, buyerId: string, amount: number) {
   const s = await getSettings(db);
+  if (await taxFree(db)) return 0;
   let pct = s.salesTaxPct;
   if (s.unionTaxDiscount) {
     const m = await db.select().from(schema.unionMembers).where(inArray(schema.unionMembers.companyId, [sellerId, buyerId]));

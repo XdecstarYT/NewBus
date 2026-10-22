@@ -18,7 +18,7 @@ test('owner signs in as 01 / Diddy and creates two friends\' companies', async (
     await page.getByTestId('create-company').click();
     logins[name] = { number: (await page.getByTestId('new-number').textContent())!.trim(), password: (await page.getByTestId('new-password').textContent())!.trim() };
   }
-  for (const p of ['/owner', '/owner/work', '/owner/ai', '/owner/economy', '/owner/justice', '/owner/codes', '/chat', '/news', '/leaderboard']) {
+  for (const p of ['/owner', '/owner/work', '/owner/ai', '/owner/town', '/owner/economy', '/owner/justice', '/owner/codes', '/chat', '/news', '/leaderboard']) {
     await page.goto(p);
     await expect(page.locator('h1').first()).toBeVisible();
   }
@@ -63,7 +63,7 @@ test('friends work, trade on the market and pay at the register', async ({ brows
   await expect(farm.getByTestId('pos-paid')).toBeVisible({ timeout: 15_000 });
 
   // every page opens
-  for (const p of ['/office', '/work', '/customers', '/contracts', '/quests', '/market', '/shops', '/shop', '/pay', '/send', '/unions', '/townhall', '/court', '/chat', '/news', '/leaderboard', '/team', '/redeem', '/settings']) {
+  for (const p of ['/office', '/work', '/customers', '/contracts', '/quests', '/bank', '/town', '/auctions', '/market', '/shops', '/shop', '/pay', '/send', '/unions', '/townhall', '/court', '/chat', '/news', '/leaderboard', '/team', '/redeem', '/settings']) {
     await bakery.goto(p);
     await expect(bakery.locator('h1').first(), p).toBeVisible();
   }
@@ -106,5 +106,31 @@ test('owner builds an office-work template with reference data; a friend does th
   await farm.getByLabel('Answer').fill('11');
   await farm.getByTestId('hand-in').click();
   await expect(farm.getByTestId('job-result')).toContainText('100%');
+  check();
+});
+
+test('the town builds a project together and the Owner auctions a gadget', async ({ browser }) => {
+  const owner = await (await browser.newContext()).newPage();
+  await login(owner, '01', 'owner-secret');
+  await owner.goto('/owner/town');
+  await owner.getByRole('button', { name: /Fund a tax holiday/ }).click();
+  await owner.getByLabel(/Size/).fill('0.25');
+  await owner.getByTestId('start-project').click();
+  await expect(owner.getByText(/Project started/)).toBeVisible();
+  await owner.getByRole('button', { name: /Start auction/ }).click();
+  await expect(owner.getByText(/Auction started/)).toBeVisible();
+
+  const farm = await (await browser.newContext()).newPage();
+  await login(farm, logins['Wheaty Farms'].number, 'secret-123');
+  const check = noConsoleErrors(farm);
+  await farm.goto('/town');
+  await farm.getByTestId('give').first().click();
+  await farm.getByLabel('Bits to give').fill('1500');
+  await farm.getByRole('button', { name: 'Give Bits' }).click();
+  await expect(farm.getByText(/Project finished/)).toBeVisible();
+  await expect(farm.getByText('No sales tax')).toBeVisible();
+  await farm.goto('/auctions');
+  await farm.getByTestId('bid').first().click();
+  await expect(farm.getByText(/top bid/)).toBeVisible();
   check();
 });

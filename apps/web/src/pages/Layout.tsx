@@ -30,6 +30,7 @@ export function navFor(me: Me): NavItem[] {
         { to: '/customers', label: 'Customers', emoji: '🧑‍💼' },
         { to: '/market', label: 'Market', emoji: '📈' },
         { to: '/contracts', label: 'Contracts', emoji: '📝' },
+        { to: '/bank', label: 'Bank', emoji: '🏦' },
         { to: '/quests', label: 'Quests', emoji: '🎯' },
         { to: '/shops', label: 'Shops', emoji: '🛒' },
         { to: '/shop', label: 'My shop & POS', emoji: '🧾' },
@@ -46,6 +47,7 @@ export function navFor(me: Me): NavItem[] {
           { to: '/owner', label: 'Overview', emoji: '👑' },
           { to: '/owner/work', label: 'Office Work', emoji: '💼' },
           { to: '/owner/ai', label: 'AI', emoji: '🤖' },
+          { to: '/owner/town', label: 'Town', emoji: '🏙️' },
           { to: '/owner/companies', label: 'Companies', emoji: '🏢' },
           { to: '/owner/economy', label: 'Economy', emoji: '💰' },
           { to: '/owner/justice', label: 'Justice & laws', emoji: '🏛️' },
@@ -53,12 +55,26 @@ export function navFor(me: Me): NavItem[] {
         ]
       : [];
   const social: NavItem[] = [
+    { to: '/town', label: 'Town', emoji: '🏙️' },
+    { to: '/auctions', label: 'Auctions', emoji: '🔨' },
     { to: '/chat', label: 'Chat', emoji: '💬' },
     { to: '/news', label: 'News', emoji: '📰' },
     { to: '/leaderboard', label: 'Leaderboard', emoji: '🏆' },
   ];
   const mine: NavItem[] = me.company ? [{ to: '/team', label: 'Team', emoji: '👥' }, { to: '/redeem', label: 'Redeem card', emoji: '🎁' }] : [];
   return [...owner, ...play, ...social, ...mine, { to: '/settings', label: 'Settings', emoji: '⚙️' }];
+}
+
+/** Today's world event, linking to the Town page. */
+function TodayChip() {
+  const q = useApi<any>(['town', 'today'], '/game/today', { refetchInterval: 60_000 });
+  const e = q.data?.event;
+  if (!e || e.id === 'quiet') return null;
+  return (
+    <Link to="/town" className="chip text-xs whitespace-nowrap hidden md:inline-flex" title={e.blurb} data-testid="today-chip">
+      {e.emoji} {e.title}
+    </Link>
+  );
 }
 
 /** The in-game clock: 1 real hour = 12 game hours. */
@@ -122,6 +138,7 @@ export function Layout({ me }: { me: Me }) {
             </div>
           )}
           <div className="ml-auto flex items-center gap-2">
+            <TodayChip />
             <GameClock />
             {me.company && (
               <div className="text-right font-display font-extrabold text-lg leading-tight" data-testid="balance">

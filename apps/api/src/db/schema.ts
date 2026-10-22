@@ -595,3 +595,83 @@ export const ownerRequests = live.table(
   },
   (t) => [index('owner_requests_company_idx').on(t.companyId, t.status), index('owner_requests_status_idx').on(t.status)],
 );
+
+// ---------------------------------------------------------------- Town & Finance
+/** A loan between two companies. An offer is funded by the lender up front; a request is funded when a lender accepts. */
+export const loans = live.table(
+  'loans',
+  {
+    id: text('id').primaryKey(),
+    side: text('side').notNull(), // offer | request
+    lenderId: text('lender_id'),
+    borrowerId: text('borrower_id'),
+    offeredTo: text('offered_to'),
+    amount: integer('amount').notNull(),
+    interestPct: integer('interest_pct').notNull(),
+    days: integer('days').notNull(), // game days to repay
+    owed: integer('owed').notNull(), // amount + interest
+    repaid: integer('repaid').notNull().default(0),
+    note: text('note').notNull().default(''),
+    status: text('status').notNull(), // open | active | repaid | defaulted | cancelled | expired
+    createdAt: ms('created_at').notNull(),
+    acceptBy: ms('accept_by').notNull(),
+    dueAt: ms('due_at'),
+    doneAt: ms('done_at'),
+  },
+  (t) => [index('loans_status_idx').on(t.status), index('loans_lender_idx').on(t.lenderId), index('loans_borrower_idx').on(t.borrowerId)],
+);
+
+/** An auction of goods. sellerId null = the Owner auctions brand-new goods for the Treasury. */
+export const auctions = live.table(
+  'auctions',
+  {
+    id: text('id').primaryKey(),
+    sellerId: text('seller_id'),
+    item: text('item').notNull(),
+    qty: integer('qty').notNull(),
+    startPrice: integer('start_price').notNull(), // total for the lot
+    topBid: integer('top_bid'),
+    topBidderId: text('top_bidder_id'),
+    bids: integer('bids').notNull().default(0),
+    note: text('note').notNull().default(''),
+    status: text('status').notNull(), // open | sold | unsold | cancelled
+    createdAt: ms('created_at').notNull(),
+    endsAt: ms('ends_at').notNull(),
+  },
+  (t) => [index('auctions_status_idx').on(t.status, t.endsAt)],
+);
+
+/** A town project: everyone chips in goods and Bits; finishing it unlocks a boost for the whole game. */
+export const projects = live.table(
+  'projects',
+  {
+    id: text('id').primaryKey(),
+    blueprint: text('blueprint').notNull(),
+    title: text('title').notNull(),
+    emoji: text('emoji').notNull(),
+    blurb: text('blurb').notNull(),
+    needBits: integer('need_bits').notNull(),
+    needItems: jsonb('need_items').$type<Record<string, number>>().notNull(),
+    haveBits: integer('have_bits').notNull().default(0),
+    haveItems: jsonb('have_items').$type<Record<string, number>>().notNull(),
+    boost: jsonb('boost').$type<Record<string, unknown>>().notNull(),
+    days: integer('days').notNull(),
+    status: text('status').notNull(), // open | done | failed
+    createdAt: ms('created_at').notNull(),
+    deadline: ms('deadline').notNull(),
+    doneAt: ms('done_at'),
+  },
+  (t) => [index('projects_status_idx').on(t.status)],
+);
+
+export const projectContribs = live.table(
+  'project_contribs',
+  {
+    projectId: text('project_id').notNull(),
+    companyId: text('company_id').notNull(),
+    bits: integer('bits').notNull().default(0),
+    items: jsonb('items').$type<Record<string, number>>().notNull(),
+    points: integer('points').notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.projectId, t.companyId] })],
+);

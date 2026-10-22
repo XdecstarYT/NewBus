@@ -59,9 +59,15 @@ Design: [SPEC-v2.md](SPEC-v2.md). It's a player-run economy hosted on **Netlify 
   - Send an AI client to a company: one AI call writes the client and a new job, or picks a ready-made job.
   - Tests: 28 API tests, 3 browser tests. Tables applied to Supabase as `0002_owner_requests`.
 
+- **Town & Finance update**
+  - Loans: offers (escrowed) and requests, flat interest, game-day terms, partial repayment, auto-collection when overdue, defaults, credit scores (300–850).
+  - Auctions: escrowed bids with instant refunds when outbid, +5% minimum raise, anti-sniping, Owner auctions of new goods for the Treasury.
+  - Town projects from 6 blueprints (scalable), contributions with points and prestige, boosts on completion, full refunds on failure.
+  - World events: one random event per game day (11 kinds), Owner can start one or switch them off. Boosts plug into shift output, sales tax, AI customer demand and prices, Energy regen and quest rewards.
+  - Tests: 37 API tests, 4 browser tests. Tables applied to Supabase as `0003_town`.
+
 ### Still open / ideas
 - Live updates use public broadcast channels whose names contain unguessable ids; the hints carry no game data. Private channels would need Supabase Auth.
-- Player-to-player loans would fit well next.
 - `packages/shared` still contains the v1 catalogue modules (unused by v2).
 
 ## Before: v1 (one always-on server)
