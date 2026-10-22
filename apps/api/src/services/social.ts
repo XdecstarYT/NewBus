@@ -3,6 +3,7 @@ import { and, desc, eq, gt, lt, sql } from 'drizzle-orm';
 import { ITEMS, type ItemId } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import { bumpQuest } from './progress';
+import { estateValues } from './estate';
 import type { Account, Company } from '../http/router';
 import { clock, MINUTE } from '../lib/time';
 import { badRequest, forbidden } from '../lib/errors';
@@ -98,12 +99,14 @@ export async function leaderboard(db: Db) {
   const wallets = await db.select().from(schema.wallets).where(sql`${schema.wallets.id} like 'co:%'`);
   const inv = await db.select().from(schema.inventory).where(gt(schema.inventory.qty, 0));
   const prices = await lastPrices(db);
+  const estate = await estateValues(db);
   const value = (item: string) => prices[item] ?? ITEMS[item as ItemId]?.basePrice ?? 0;
   return cos
     .map((c) => {
       const bits = wallets.find((w) => w.id === `co:${c.id}`)?.balance ?? 0;
       const stock = inv.filter((i) => i.companyId === c.id).reduce((s, i) => s + i.qty * value(i.item), 0);
-      return { id: c.id, name: c.name, emoji: c.emoji, color: c.color, bits, stock, netWorth: bits + stock, prestige: c.prestige, xp: c.xp };
+      const property = estate[c.id] ?? 0;
+      return { id: c.id, name: c.name, emoji: c.emoji, color: c.color, bits, stock, property, netWorth: bits + stock + property, prestige: c.prestige, xp: c.xp };
     })
     .sort((a, b) => b.netWorth - a.netWorth);
 }

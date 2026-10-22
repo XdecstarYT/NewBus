@@ -5,4 +5,5 @@ import './routes/politics';
 import './routes/owner';
 import './routes/work';
 import './routes/town';
+import './routes/estate';
 export { handle } from './http/router';

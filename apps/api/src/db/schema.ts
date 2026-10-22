@@ -675,3 +675,23 @@ export const projectContribs = live.table(
   },
   (t) => [primaryKey({ columns: [t.projectId, t.companyId] })],
 );
+
+// ---------------------------------------------------------------- real estate
+/** A land plot in the 3D town. Blocks are [x, y, z, type]. */
+export const plots = live.table(
+  'plots',
+  {
+    id: text('id').primaryKey(),
+    gx: integer('gx').notNull(),
+    gy: integer('gy').notNull(),
+    ownerId: text('owner_id'),
+    name: text('name').notNull().default(''),
+    blocks: jsonb('blocks').$type<Array<[number, number, number, number]>>().notNull(),
+    forSale: boolean('for_sale').notNull().default(false),
+    askPrice: integer('ask_price'),
+    boughtFor: integer('bought_for'),
+    boughtAt: ms('bought_at'),
+    updatedAt: ms('updated_at').notNull(),
+  },
+  (t) => [index('plots_owner_idx').on(t.ownerId)],
+);

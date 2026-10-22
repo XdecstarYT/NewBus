@@ -63,7 +63,7 @@ test('friends work, trade on the market and pay at the register', async ({ brows
   await expect(farm.getByTestId('pos-paid')).toBeVisible({ timeout: 15_000 });
 
   // every page opens
-  for (const p of ['/office', '/work', '/customers', '/contracts', '/quests', '/bank', '/town', '/auctions', '/market', '/shops', '/shop', '/pay', '/send', '/unions', '/townhall', '/court', '/chat', '/news', '/leaderboard', '/team', '/redeem', '/settings']) {
+  for (const p of ['/office', '/work', '/customers', '/contracts', '/quests', '/bank', '/town', '/auctions', '/world', '/market', '/shops', '/shop', '/pay', '/send', '/unions', '/townhall', '/court', '/chat', '/news', '/leaderboard', '/team', '/redeem', '/settings']) {
     await bakery.goto(p);
     await expect(bakery.locator('h1').first(), p).toBeVisible();
   }
@@ -132,5 +132,31 @@ test('the town builds a project together and the Owner auctions a gadget', async
   await farm.goto('/auctions');
   await farm.getByTestId('bid').first().click();
   await expect(farm.getByText(/top bid/)).toBeVisible();
+  check();
+});
+
+test('buy land in the 3D town and build a little house brick by brick', async ({ browser }) => {
+  const farm = await (await browser.newContext()).newPage();
+  await login(farm, logins['Wheaty Farms'].number, 'secret-123');
+  const check = noConsoleErrors(farm);
+  await farm.goto('/world');
+  await expect(farm.getByTestId('world-canvas').locator('canvas')).toBeVisible();
+  await farm.getByTestId('map-p0_0').click();
+  await farm.getByTestId('buy-plot').click();
+  await expect(farm.getByText(/It's yours/)).toBeVisible();
+  await farm.getByTestId('start-building').click();
+  // wheat thatch: the farm has wheat from earlier shifts
+  await farm.getByRole('button', { name: /Thatch/ }).click();
+  await farm.getByTestId('cell-0-0').click();
+  await farm.getByTestId('cell-1-0').click();
+  await farm.getByLabel('Floor up').click();
+  await farm.getByTestId('cell-0-0').click();
+  await expect(farm.getByText('3 unsaved changes')).toBeVisible();
+  await farm.getByTestId('save-building').click();
+  await expect(farm.getByText(/Your building has 3 blocks/)).toBeVisible();
+  await farm.screenshot({ path: 'test-results/world.png' });
+  await farm.getByRole('button', { name: /Back to the map/ }).click();
+  await farm.waitForTimeout(800);
+  await farm.screenshot({ path: 'test-results/world-map.png' });
   check();
 });

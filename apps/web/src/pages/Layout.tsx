@@ -55,6 +55,7 @@ export function navFor(me: Me): NavItem[] {
         ]
       : [];
   const social: NavItem[] = [
+    { to: '/world', label: '3D Town & Homes', emoji: '🌍' },
     { to: '/town', label: 'Town', emoji: '🏙️' },
     { to: '/auctions', label: 'Auctions', emoji: '🔨' },
     { to: '/chat', label: 'Chat', emoji: '💬' },

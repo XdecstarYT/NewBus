@@ -72,5 +72,7 @@ export const DEFAULT_SETTINGS = {
   aiEnabled: true,
   /** A random world event every game day (weather, festivals, tax-free days...). */
   worldEvents: true,
+  /** Base price of a land plot (central plots cost up to 2.5×). */
+  landPrice: 400,
 };
 export type Settings = typeof DEFAULT_SETTINGS;

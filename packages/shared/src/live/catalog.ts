@@ -7,7 +7,7 @@
 
 export const ITEM_IDS = [
   'wheat', 'beans', 'ore', 'wood', 'cotton', 'milk',
-  'flour', 'coffee', 'steel', 'planks', 'fabric',
+  'flour', 'coffee', 'steel', 'planks', 'fabric', 'bricks', 'glass',
   'bread', 'pastry', 'latte', 'tools', 'furniture', 'uniform', 'gadget',
 ] as const;
 export type ItemId = (typeof ITEM_IDS)[number];
@@ -38,6 +38,8 @@ export const ITEMS: Record<ItemId, ItemDef> = {
   steel: { id: 'steel', name: 'Steel', emoji: '🔩', tier: 'processed', basePrice: 15, blurb: 'Needed for tools, gadgets and every building.' },
   planks: { id: 'planks', name: 'Planks', emoji: '🟫', tier: 'processed', basePrice: 10, blurb: 'Needed for furniture, tools and every building.' },
   fabric: { id: 'fabric', name: 'Fabric', emoji: '🧵', tier: 'processed', basePrice: 11, blurb: 'Sewn into uniforms and furniture.' },
+  bricks: { id: 'bricks', name: 'Bricks', emoji: '🧱', tier: 'processed', basePrice: 4, blurb: 'Fired in a kiln. Build houses with them, brick by brick.' },
+  glass: { id: 'glass', name: 'Glass', emoji: '🪟', tier: 'processed', basePrice: 7, blurb: 'Fired in a kiln. Windows for your houses.' },
   bread: { id: 'bread', name: 'Bread', emoji: '🍞', tier: 'goods', basePrice: 8, food: 15, blurb: 'Eat it: +15 Energy.' },
   pastry: { id: 'pastry', name: 'Pastry', emoji: '🥐', tier: 'goods', basePrice: 15, food: 25, blurb: 'Eat it: +25 Energy.' },
   latte: { id: 'latte', name: 'Latte', emoji: '☕', tier: 'goods', basePrice: 18, food: 30, blurb: 'Drink it: +30 Energy.' },
@@ -49,7 +51,7 @@ export const ITEMS: Record<ItemId, ItemDef> = {
 
 export const FACILITY_IDS = [
   'farm', 'plantation', 'mine', 'forest',
-  'mill', 'roastery', 'foundry', 'sawmill', 'loom',
+  'mill', 'roastery', 'foundry', 'sawmill', 'loom', 'kiln',
   'bakery', 'cafe', 'workshop', 'studio', 'tailor', 'lab',
 ] as const;
 export type FacilityId = (typeof FACILITY_IDS)[number];
@@ -81,6 +83,7 @@ export const FACILITIES: Record<FacilityId, FacilityDef> = {
   roastery: { id: 'roastery', name: 'Roastery', emoji: '🔥', kind: 'processed', blurb: 'Roasts coffee beans.', recipes: [r('coffee', 4, { beans: 3 }, { coffee: 2 })] },
   foundry: { id: 'foundry', name: 'Foundry', emoji: '🏭', kind: 'processed', blurb: 'Smelts ore into steel.', recipes: [r('steel', 5, { ore: 3 }, { steel: 2 })] },
   sawmill: { id: 'sawmill', name: 'Sawmill', emoji: '🪚', kind: 'processed', blurb: 'Saws wood into planks.', recipes: [r('planks', 4, { wood: 3 }, { planks: 2 })] },
+  kiln: { id: 'kiln', name: 'Kiln', emoji: '🧱', kind: 'processed', blurb: 'Fires ore and wood into bricks and glass for houses.', recipes: [r('bricks', 4, { ore: 1, wood: 1 }, { bricks: 4 }), r('glass', 4, { ore: 2 }, { glass: 2 })] },
   loom: { id: 'loom', name: 'Loom', emoji: '🧶', kind: 'processed', blurb: 'Weaves cotton into fabric.', recipes: [r('fabric', 4, { cotton: 3 }, { fabric: 2 })] },
   bakery: { id: 'bakery', name: 'Bakery', emoji: '🥖', kind: 'goods', blurb: 'Bakes bread and pastries.', recipes: [r('bread', 4, { flour: 2 }, { bread: 3 }), r('pastry', 5, { flour: 2, milk: 1 }, { pastry: 2 })] },
   cafe: { id: 'cafe', name: 'Café', emoji: '🧋', kind: 'goods', blurb: 'Brews lattes.', recipes: [r('latte', 4, { coffee: 1, milk: 1 }, { latte: 2 })] },

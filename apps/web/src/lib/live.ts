@@ -37,6 +37,7 @@ const REFRESH: Record<string, string[][]> = {
   town: [['town'], ['owner', 'town']],
   bank: [['bank']],
   auctions: [['auctions']],
+  world: [['world']],
 };
 
 let client: ReturnType<typeof createClient> | null = null;

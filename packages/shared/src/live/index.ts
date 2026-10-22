@@ -4,3 +4,4 @@ export { formatBits } from '../format';
 export * from './work';
 export * from './time';
 export * from './town';
+export * from './estate';

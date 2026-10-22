@@ -78,6 +78,7 @@ route('PATCH', '/owner/settings', 'owner', async (c) => {
       questReward: z.number().int().min(0).max(100_000).optional(),
       aiEnabled: z.boolean().optional(),
       worldEvents: z.boolean().optional(),
+      landPrice: z.number().int().min(1).max(1_000_000).optional(),
     }),
     c.body,
   );

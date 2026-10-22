@@ -13,6 +13,7 @@ export function OwnerTown() {
   const inv = [['owner'], ['town']];
   const setEvent = useAction((event: string) => POST('/owner/town/event', { event }), { invalidate: inv, success: 'Event started. It lasts until the end of this game day.' });
   const toggle = useAction((v: boolean) => PATCH('/owner/settings', { worldEvents: v }), { invalidate: inv, success: 'Saved.' });
+  const land = useAction((v: number) => PATCH('/owner/settings', { landPrice: Math.max(1, Math.floor(v || 1)) }), { invalidate: [...inv, ['world']], success: 'Land price saved.' });
   const clear = useAction((id: string) => POST(`/owner/town/boosts/${id}/clear`), { invalidate: inv, success: 'Boost switched off.' });
   const cancel = useAction((id: string) => POST(`/owner/town/projects/${id}/cancel`), { invalidate: inv, success: 'Project cancelled; everything was handed back.' });
   if (!q.data || !o.data) return <LoadingJoke />;
@@ -25,6 +26,10 @@ export function OwnerTown() {
           <div className="h3">🌦️ World event (game day {d.day})</div>
           {d.event ? <div className="text-sm"><b>{d.event.emoji} {d.event.title}</b>: {d.event.blurb}</div> : <div className="text-sm muted">None right now.</div>}
           <Toggle checked={o.data.settings.worldEvents} onChange={(v) => toggle.mutate(v)} label="A random event every game day" />
+          <form className="flex items-end gap-2" onSubmit={(e) => (e.preventDefault(), land.mutate(Number(new FormData(e.currentTarget).get('land'))))}>
+            <label className="label flex-1">🏡 Land price (edge plots; the town centre costs up to 2.5×)<input name="land" type="number" className="input" min={1} defaultValue={o.data.settings.landPrice} /></label>
+            <button className="btn-ghost btn-sm">Save</button>
+          </form>
           <label className="label">Start an event now<select className="input" value="" onChange={(e) => e.target.value && setEvent.mutate(e.target.value)} data-testid="pick-event"><option value="">Pick one...</option>{d.events.map((e: any) => <option key={e.id} value={e.id}>{e.emoji} {e.title}</option>)}</select></label>
         </div>
         <div className="card flex flex-col gap-2">

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { useMe, type Me } from './lib/hooks';
 import { Login } from './pages/Login';
@@ -20,6 +20,9 @@ import { Customers, Contracts, Quests } from './pages/play/Deals';
 import { OwnerWork, OwnerAI } from './pages/owner/OwnerWork';
 import { Town, Bank, Auctions } from './pages/play/Town';
 import { OwnerTown } from './pages/owner/OwnerTown';
+
+// the 3D town pulls in three.js, so it only loads when someone opens it
+const World = lazy(() => import('./pages/play/World').then((m) => ({ default: m.World })));
 import { OwnerOverview, OwnerCompanies, OwnerCompany, OwnerEconomy, OwnerJustice, OwnerCase, OwnerCodes } from './pages/owner/Owner';
 
 /** Apply accessibility / theme prefs to <html>. */
@@ -91,6 +94,7 @@ function Shell() {
           </>
         )}
         <Route path="/town" element={<Town />} />
+        <Route path="/world" element={<Suspense fallback={<LoadingJoke />}><World /></Suspense>} />
         <Route path="/auctions" element={<Auctions />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/news" element={<News />} />

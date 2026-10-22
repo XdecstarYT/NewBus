@@ -66,6 +66,13 @@ Design: [SPEC-v2.md](SPEC-v2.md). It's a player-run economy hosted on **Netlify 
   - World events: one random event per game day (11 kinds), Owner can start one or switch them off. Boosts plug into shift output, sales tax, AI customer demand and prices, Energy regen and quest rewards.
   - Tests: 37 API tests, 4 browser tests. Tables applied to Supabase as `0003_town`.
 
+- **3D town & real estate update**
+  - 10×10 land plots (8×8 blocks, 12 high) priced by distance to the centre; buy from the Town, list for sale, buy from players (sales tax applies), rename, Owner reclaim. Up to 6 plots per company.
+  - Building: 9 block types, each a real item; edits are batched (up to 300), validated on the server (inside the plot, resting on the ground or another block), and only the net materials move.
+  - New Kiln facility with 🧱 bricks and 🪟 glass.
+  - 3D view in three.js (lazy-loaded; instanced blocks, shadows, orbit camera, ghost preview, click to place, right-click/eraser to remove) plus a 2D map and a floor-by-floor plan for phones and screen readers.
+  - Property value (land + 1.5× materials) on the leaderboard. Tests: 38 API tests, 5 browser tests. Table applied to Supabase as `0004_estate`.
+
 ### Still open / ideas
 - Live updates use public broadcast channels whose names contain unguessable ids; the hints carry no game data. Private channels would need Supabase Auth.
 - `packages/shared` still contains the v1 catalogue modules (unused by v2).
