@@ -73,6 +73,12 @@ Design: [SPEC-v2.md](SPEC-v2.md). It's a player-run economy hosted on **Netlify 
   - 3D view in three.js (lazy-loaded; instanced blocks, shadows, orbit camera, ghost preview, click to place, right-click/eraser to remove) plus a 2D map and a floor-by-floor plan for phones and screen readers.
   - Property value (land + 1.5× materials) on the leaderboard. Tests: 38 API tests, 5 browser tests. Table applied to Supabase as `0004_estate`.
 
+- **Democracy update**
+  - Union bills (tax, stimulus, energy) and free-text demands, paid from the union treasury, one open bill per union; two thirds yes can't be vetoed; the government answers demands publicly.
+  - Vote of no confidence (called by a union President with at least 2 member companies, cost from the union treasury, 3-game-day cooldown; passes with more yes than no and yes from at least 40% of companies), then a Mayor election (nominations, then voting; one vote per company).
+  - The Mayor gets the Owner's powers (`governs()` in the router) for a 14-game-day term; then a new election. Every Owner action by the Mayor is logged and shown in the Town Hall. Creator-only routes (`devOnly`) stay with account 01, who can dismiss the Mayor.
+  - Tests: 40 API tests, 6 browser tests. `laws.proposed_by` and `laws.response` applied to Supabase as `0005_government`.
+
 ### Still open / ideas
 - Live updates use public broadcast channels whose names contain unguessable ids; the hints carry no game data. Private channels would need Supabase Auth.
 - `packages/shared` still contains the v1 catalogue modules (unused by v2).

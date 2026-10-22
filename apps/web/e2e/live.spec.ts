@@ -160,3 +160,29 @@ test('buy land in the 3D town and build a little house brick by brick', async ({
   await farm.screenshot({ path: 'test-results/world-map.png' });
   check();
 });
+
+test('a union calls a vote of no confidence in the Owner from the Town Hall', async ({ browser }) => {
+  const farm = await (await browser.newContext()).newPage();
+  await login(farm, logins['Crusty Dreams'].number, 'secret-123');
+  const check = noConsoleErrors(farm);
+  await farm.goto('/unions');
+  await farm.getByLabel('Name', { exact: true }).fill('Bakers First');
+  await farm.getByTestId('union-create').click();
+  await expect(farm.getByText(/Bakers First/).first()).toBeVisible();
+  await farm.getByText(/Bakers First/).first().click();
+  await farm.getByRole('tab', { name: /Treasury/ }).click();
+  await farm.getByLabel('Donation').fill('300');
+  await farm.getByRole('button', { name: 'Donate' }).click();
+  await expect(farm.getByText('💝 Thanks!')).toBeVisible();
+  await farm.goto('/townhall');
+  await expect(farm.getByTestId('government')).toContainText('The Owner');
+  await farm.getByTestId('call-no-confidence').click();
+  await farm.getByRole('button', { name: 'Yes, do it!' }).click();
+  // a one-company union can not do it yet: the game explains why
+  await expect(farm.getByText(/at least 2 member companies/)).toBeVisible();
+  await farm.getByTestId('propose-bill').click();
+  await farm.getByLabel('Your demand').fill('Build a park in the town square');
+  await farm.getByRole('button', { name: /Put it to the vote/ }).click();
+  await expect(farm.getByText('Demand: Build a park in the town square')).toBeVisible();
+  check();
+});

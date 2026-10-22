@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { and, eq } from 'drizzle-orm';
 import { schema } from '../db';
+import { governs } from '../services/government';
 import { parse, route, type Ctx } from '../http/router';
 import * as accounts from '../services/accounts';
 import { energyNow, energyStats } from '../services/energy';
@@ -17,6 +18,8 @@ export async function mePayload(c: Ctx) {
     company: c.company ? { ...c.company, level: companyLevel(c.company.xp), balance: await balance(c.db, W.company(c.company.id)) } : null,
     energy: { now: Math.floor(energyNow(a, stats)), ...stats },
     unread,
+    /** an elected Mayor has the Owner's powers */
+    governing: a.role === 'OWNER' || (await governs(c.db, a)),
   };
 }
 

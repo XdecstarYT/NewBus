@@ -6,4 +6,5 @@ import './routes/owner';
 import './routes/work';
 import './routes/town';
 import './routes/estate';
+import './routes/government';
 export { handle } from './http/router';

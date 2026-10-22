@@ -17,6 +17,7 @@ import { sweepRequests } from './ownerai';
 import { sweepLoans } from './bank';
 import { sweepAuctions } from './auctions';
 import { sweepTown } from './town';
+import { sweepGovernment } from './government';
 
 let lastLocal = 0;
 
@@ -42,6 +43,7 @@ export async function sweep(db: Db, force = false, opts: { allowAi?: boolean } =
     await sweepLoans(t, now);
     await sweepAuctions(t, now);
     await sweepTown(t, now);
+    await sweepGovernment(t, now);
     if (!opts.allowAi) {
       await sweepWork(t, now, false);
       await sweepCustomers(t, now, false);

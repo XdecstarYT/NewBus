@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { desc } from 'drizzle-orm';
 import { CASE_KINDS, EVIDENCE_KINDS, FACILITY_IDS, FEATURES, LAW_KINDS } from '@dw/shared/live';
 import { schema } from '../db';
-import { parse, route } from '../http/router';
+import { devOnly, parse, route } from '../http/router';
 import { tx } from '../http/tx';
 import * as owner from '../services/owner';
 import * as accounts from '../services/accounts';
@@ -139,8 +139,22 @@ route('POST', '/owner/sanctions', 'owner', async (c) => {
 });
 route('POST', '/owner/sanctions/:id/lift', 'owner', async (c) => tx(c, (db) => justice.liftSanction(db, c.params.id)));
 route('POST', '/owner/laws', 'owner', async (c) => {
-  const v = parse(z.object({ kind: z.enum(Object.keys(LAW_KINDS) as [keyof typeof LAW_KINDS]), value: z.number().int() }), c.body);
+  const v = parse(z.object({ kind: z.enum(['tax', 'stimulus', 'energy']), value: z.number().int() }), c.body);
   return tx(c, (db) => laws.propose(db, v.kind, v.value));
 });
 route('POST', '/owner/laws/:id/decide', 'owner', async (c) => tx(c, (db) => laws.decide(db, c.params.id, parse(z.object({ decision: z.enum(['pass', 'veto', 'count']) }), c.body).decision)));
 route('POST', '/owner/unions/:id/dissolve', 'owner', async (c) => tx(c, (db) => unions.dissolve(db, c.params.id)));
+
+// logins, moderation and the big red button stay with the game's creator, even when a Mayor is in office
+for (const [m, p] of [
+  ['POST', '/owner/companies'],
+  ['POST', '/owner/companies/:id/status'],
+  ['POST', '/owner/accounts/:id/reset'],
+  ['POST', '/owner/accounts/:id/mute'],
+  ['POST', '/owner/chat/:id/delete'],
+  ['POST', '/owner/season/reset'],
+  ['GET', '/owner/audit-log'],
+  // a Mayor can not shut down the unions that could vote them out
+  ['POST', '/owner/unions/:id/dissolve'],
+] as const)
+  devOnly(m, p);

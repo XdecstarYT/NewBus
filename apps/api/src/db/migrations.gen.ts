@@ -21,6 +21,10 @@ export const MIGRATIONS: Array<{ name: string; sql: string }> = [
     "sql": "CREATE TABLE \"live\".\"plots\" (\n\t\"id\" text PRIMARY KEY NOT NULL,\n\t\"gx\" integer NOT NULL,\n\t\"gy\" integer NOT NULL,\n\t\"owner_id\" text,\n\t\"name\" text DEFAULT '' NOT NULL,\n\t\"blocks\" jsonb NOT NULL,\n\t\"for_sale\" boolean DEFAULT false NOT NULL,\n\t\"ask_price\" integer,\n\t\"bought_for\" integer,\n\t\"bought_at\" bigint,\n\t\"updated_at\" bigint NOT NULL\n);\n--> statement-breakpoint\nCREATE INDEX \"plots_owner_idx\" ON \"live\".\"plots\" USING btree (\"owner_id\");"
   },
   {
+    "name": "0005_government",
+    "sql": "ALTER TABLE \"live\".\"laws\" ADD COLUMN \"proposed_by\" text;--> statement-breakpoint\nALTER TABLE \"live\".\"laws\" ADD COLUMN \"response\" text;"
+  },
+  {
     "name": "9000_platform",
     "sql": "-- Live hints: tell browsers \"something changed on <topic>\" through Supabase Realtime.\n-- Outside Supabase (tests, plain Postgres) there is no realtime schema, so this quietly does nothing.\nCREATE OR REPLACE FUNCTION live.hint(topic text, payload jsonb) RETURNS void\nLANGUAGE plpgsql AS $$\nBEGIN\n  BEGIN\n    PERFORM realtime.send(payload, 'hint', topic, false);\n  EXCEPTION WHEN OTHERS THEN -- a missed hint must never undo a game action\n    NULL;\n  END;\nEND;\n$$;\n"
   }

@@ -47,7 +47,7 @@ function Shell() {
   if (q.error && q.error.status !== 401 && !me) return <ServerDown message={q.error.message} />;
   if (!me?.account) return <Login />;
   if (me.account.mustChangePassword) return <ChangePasswordPage owner={me.account.role === 'OWNER'} />;
-  const owner = me.account.role === 'OWNER';
+  const owner = me.account.role === 'OWNER' || me.governing;
   const home = me.company ? '/office' : '/owner';
   return (
     <Routes>
@@ -74,7 +74,6 @@ function Shell() {
             <Route path="/redeem/:code" element={<Redeem />} />
             <Route path="/unions" element={<Unions />} />
             <Route path="/unions/:id" element={<UnionPage />} />
-            <Route path="/townhall" element={<TownHall />} />
             <Route path="/court" element={<Court />} />
             <Route path="/court/:id" element={<CaseDetail />} />
           </>
@@ -94,6 +93,7 @@ function Shell() {
           </>
         )}
         <Route path="/town" element={<Town />} />
+        <Route path="/townhall" element={<TownHall />} />
         <Route path="/world" element={<Suspense fallback={<LoadingJoke />}><World /></Suspense>} />
         <Route path="/auctions" element={<Auctions />} />
         <Route path="/chat" element={<Chat />} />

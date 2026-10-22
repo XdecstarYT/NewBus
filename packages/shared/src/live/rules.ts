@@ -41,6 +41,7 @@ export const LAW_KINDS = {
   tax: { label: 'Set the sales tax', emoji: '🧾', unit: '%', blurb: 'Sales tax on every market, shop and POS sale becomes this %.' },
   stimulus: { label: 'Stimulus payment', emoji: '💸', unit: 'BT each', blurb: 'The Treasury pays this much to every company.' },
   energy: { label: 'Energy boost', emoji: '⚡', unit: 'Energy/hour for a game day', blurb: 'Everyone regenerates this much extra Energy per hour for one game day.' },
+  demand: { label: 'Demand', emoji: '📣', unit: '', blurb: 'Ask the government for anything, in your own words. If it passes, the Owner or Mayor has to answer it publicly.' },
 } as const;
 export type LawKind = keyof typeof LAW_KINDS;
 
@@ -74,5 +75,13 @@ export const DEFAULT_SETTINGS = {
   worldEvents: true,
   /** Base price of a land plot (central plots cost up to 2.5×). */
   landPrice: 400,
+  /** A union pays this from its treasury to call a vote of no confidence in whoever runs the town. */
+  noConfidenceCost: 500,
+  /** Share of all companies that must vote yes for a vote of no confidence to pass. */
+  noConfidenceQuorumPct: 40,
+  /** How long an elected Mayor serves before the next election (game days). */
+  mayorTermDays: 14,
+  /** A union pays this from its treasury to put a bill to the Town Hall. */
+  unionBillCost: 200,
 };
 export type Settings = typeof DEFAULT_SETTINGS;

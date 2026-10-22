@@ -42,12 +42,13 @@ export function navFor(me: Me): NavItem[] {
       ]
     : [];
   const owner: NavItem[] =
-    me.account.role === 'OWNER'
+    me.governing
       ? [
           { to: '/owner', label: 'Overview', emoji: '👑' },
           { to: '/owner/work', label: 'Office Work', emoji: '💼' },
           { to: '/owner/ai', label: 'AI', emoji: '🤖' },
           { to: '/owner/town', label: 'Town', emoji: '🏙️' },
+          ...(me.company ? [] : [{ to: '/townhall', label: 'Town Hall', emoji: '🏛️' }]),
           { to: '/owner/companies', label: 'Companies', emoji: '🏢' },
           { to: '/owner/economy', label: 'Economy', emoji: '💰' },
           { to: '/owner/justice', label: 'Justice & laws', emoji: '🏛️' },
@@ -129,7 +130,7 @@ export function Layout({ me }: { me: Me }) {
             <span className="text-2xl" aria-hidden>{me.company?.emoji ?? '👑'}</span>
             <div className="min-w-0">
               <div className="font-display font-extrabold truncate leading-tight">{me.company?.name ?? 'Owner Panel'}</div>
-              <div className="text-xs muted truncate">{me.account.name}{me.company ? ` · Lv ${me.company.level}` : ''}</div>
+              <div className="text-xs muted truncate">{me.account.name}{me.company ? ` · Lv ${me.company.level}` : ''}{me.governing && me.account.role !== 'OWNER' ? ' · 👑 Mayor' : ''}</div>
             </div>
           </div>
           {me.company && (

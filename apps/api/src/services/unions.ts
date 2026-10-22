@@ -4,7 +4,7 @@
  * President and Treasurer for fixed terms, can hold votes of no confidence, pay
  * daily dues into a treasury, and trade with each other at half the sales tax.
  */
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql, ne } from 'drizzle-orm';
 import { UNION_OFFICES, type UnionOffice, GAME_DAY, GAME_MINUTE, gameDayKey } from '@dw/shared/live';
 import { schema, type Db } from '../db';
 import type { Account, Company } from '../http/router';
@@ -293,11 +293,11 @@ async function closeElection(db: Db, e: typeof schema.elections.$inferSelect) {
 
 /** Advance election phases, start term elections, collect daily dues. */
 export async function sweepUnions(db: Db, now: number) {
-  for (const e of await db.select().from(schema.elections).where(and(eq(schema.elections.status, 'nominating'), sql`${schema.elections.votingAt} <= ${now}`))) {
+  for (const e of await db.select().from(schema.elections).where(and(eq(schema.elections.status, 'nominating'), ne(schema.elections.unionId, 'town'), sql`${schema.elections.votingAt} <= ${now}`))) {
     await db.update(schema.elections).set({ status: 'voting' }).where(eq(schema.elections.id, e.id));
     await tell(db, e.unionId, '🗳️ Voting is open', 'Your rep casts one vote for your company.');
   }
-  for (const e of await db.select().from(schema.elections).where(and(eq(schema.elections.status, 'voting'), sql`${schema.elections.closesAt} <= ${now}`))) await closeElection(db, e);
+  for (const e of await db.select().from(schema.elections).where(and(eq(schema.elections.status, 'voting'), ne(schema.elections.unionId, 'town'), sql`${schema.elections.closesAt} <= ${now}`))) await closeElection(db, e);
   const s = await getSettings(db);
   for (const u of await db.select().from(schema.unions).where(sql`${schema.unions.termEndsAt} <= ${now}`)) {
     await db.update(schema.unions).set({ termEndsAt: now + s.unionTermDays * GAME_DAY }).where(eq(schema.unions.id, u.id));

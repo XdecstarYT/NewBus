@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { CASE_KINDS, EVIDENCE_KINDS, FEATURES, UNION_OFFICES, type CaseKind, type EvidenceKind, type Feature, type UnionOffice } from '@dw/shared/live';
+import { CASE_KINDS, EVIDENCE_KINDS, FEATURES, LAW_KINDS, UNION_OFFICES, type CaseKind, type EvidenceKind, type Feature, type LawKind, type UnionOffice } from '@dw/shared/live';
 import { POST, PATCH } from '../../lib/api';
 import { useApi, useAction } from '../../lib/hooks';
 import { formatBits } from '../../lib/game';
@@ -222,35 +222,150 @@ function UnionSettings({ u }: { u: any }) {
 
 // ============================================================ town hall
 export function TownHall() {
+  const me = useMe2();
   const q = useApi<any>(['laws'], '/game/laws', { refetchInterval: 30_000 });
+  const g = useApi<any>(['government'], '/game/government', { refetchInterval: 20_000 });
   const vote = useAction((v: { id: string; vote: 'yes' | 'no' }) => POST(`/game/laws/${v.id}/vote`, { vote: v.vote }), { invalidate: [['laws']], success: '🗳️ Your company voted.' });
+  const [answer, setAnswer] = useState<Record<string, string>>({});
+  const respond = useAction((id: string) => POST(`/owner/laws/${id}/respond`, { text: answer[id] ?? '' }), { invalidate: [['laws']], success: '📣 Answer published.' });
+  const decide = useAction((v: { id: string; decision: 'pass' | 'veto' }) => POST(`/owner/laws/${v.id}/decide`, { decision: v.decision }), { invalidate: [['laws']], success: 'Decided.' });
   useNow(10_000);
-  if (!q.data) return <LoadingJoke />;
+  if (!q.data || !g.data) return <LoadingJoke />;
+  const governing = me.governing;
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-3">
       <h1 className="h1">🏛️ Town Hall</h1>
+      <Government g={g.data} />
       <div className="flex gap-2 flex-wrap">
         <div className="card !py-2">🧾 Sales tax: <b>{q.data.salesTaxPct}%</b></div>
         <div className="card !py-2">🏦 Treasury: <b>{formatBits(q.data.treasury)}</b></div>
       </div>
-      <p className="text-sm muted">The Owner proposes laws; every company gets one vote. More yes than no and it passes (unless the Owner vetoes it).</p>
+      <h2 className="h2">📜 Bills & demands</h2>
+      <p className="text-sm muted">The government and the unions put bills to a vote; every company gets one vote. More yes than no and it passes. The government can veto a bill, unless two thirds voted yes. Demands are requests in your own words that the government has to answer.</p>
+      {me.company && <ProposeBill cost={g.data.rules.billCost} />}
       {!q.data.laws.length ? <EmptyState emoji="🏛️" title="No bills yet" /> : q.data.laws.map((l: any) => {
         const open = l.status === 'voting';
         const total = l.yes + l.no;
         return (
           <div key={l.id} className="card flex flex-col gap-2" data-testid={`law-${l.id}`}>
-            <div className="flex items-center gap-2 flex-wrap"><b className="flex-1">{l.title}</b><span className="chip">{open ? `⏳ ${timeLeft(l.closesAt)}` : l.status === 'passed' ? '✅ passed' : l.status === 'vetoed' ? '⛔ vetoed' : '❌ failed'}</span></div>
+            <div className="flex items-center gap-2 flex-wrap"><b className="flex-1">{l.title}</b><span className="chip">{open ? `⏳ ${timeLeft(l.closesAt)}` : l.status === 'passed' ? '✅ passed' : l.status === 'vetoed' ? (l.kind === 'demand' ? '🙅 rejected' : '⛔ vetoed') : '❌ failed'}</span></div>
+            <div className="text-xs muted">{l.union ? `Proposed by ${l.union.emoji} ${l.union.name}` : 'Proposed by the government'}{l.supermajority && open && l.kind !== 'demand' ? ' · 💪 two thirds yes: can not be vetoed' : ''}</div>
             <div className="flex items-center gap-2 text-sm"><span>👍 {l.yes}</span><div className="flex-1 h-3 rounded bg-rose-300 overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${total ? (l.yes / total) * 100 : 50}%` }} /></div><span>{l.no} 👎</span></div>
-            {open && (
+            {open && me.company && (
               <div className="flex gap-2">
                 <button className={l.myVote === 'yes' ? 'btn-good btn-sm' : 'btn-ghost btn-sm'} onClick={() => vote.mutate({ id: l.id, vote: 'yes' })}>👍 Yes{l.myVote === 'yes' ? ' ✅' : ''}</button>
                 <button className={l.myVote === 'no' ? 'btn-bad btn-sm' : 'btn-ghost btn-sm'} onClick={() => vote.mutate({ id: l.id, vote: 'no' })}>👎 No{l.myVote === 'no' ? ' ✅' : ''}</button>
               </div>
             )}
+            {open && governing && (
+              <div className="flex gap-2 text-xs">
+                <span className="muted self-center">Government:</span>
+                <button className="btn-ghost btn-sm" onClick={() => decide.mutate({ id: l.id, decision: 'pass' })}>{l.kind === 'demand' ? '✅ Accept' : '✍️ Sign now'}</button>
+                <button className="btn-ghost btn-sm" disabled={l.supermajority && l.kind !== 'demand'} onClick={() => decide.mutate({ id: l.id, decision: 'veto' })}>{l.kind === 'demand' ? '🙅 Reject' : '⛔ Veto'}</button>
+              </div>
+            )}
+            {l.kind === 'demand' && l.response && <div className="rounded-xl bg-ink/5 p-2 text-sm">🏛️ <b>The government answers:</b> {l.response}</div>}
+            {l.kind === 'demand' && !l.response && governing && (
+              <form className="flex gap-2" onSubmit={(e) => (e.preventDefault(), respond.mutate(l.id))}>
+                <input className="input flex-1" maxLength={500} value={answer[l.id] ?? ''} onChange={(e) => setAnswer({ ...answer, [l.id]: e.target.value })} placeholder="Answer this demand publicly" aria-label="Answer" />
+                <button className="btn-primary btn-sm" disabled={(answer[l.id] ?? '').trim().length < 2}>📣 Answer</button>
+              </form>
+            )}
           </div>
         );
       })}
     </div>
+  );
+}
+
+/** Who runs the town, and the vote or election that could change that. */
+function Government({ g }: { g: any }) {
+  const me = useMe2();
+  const confirm = useConfirm();
+  const inv = [['government'], ['me']];
+  const call = useAction(() => POST('/game/government/no-confidence'), { invalidate: inv, success: '⚠️ Vote of no confidence called!' });
+  const run = useAction((v: { id: string; pitch: string }) => POST(`/game/government/elections/${v.id}/run`, { pitch: v.pitch }), { invalidate: inv, success: "🗳️ You're on the ballot!" });
+  const withdraw = useAction((id: string) => POST(`/game/government/elections/${id}/withdraw`), { invalidate: inv, success: 'You left the race.' });
+  const ballot = useAction((v: { id: string; choice: string }) => POST(`/game/government/elections/${v.id}/vote`, { choice: v.choice }), { invalidate: inv, success: '🗳️ Your company voted.', onSuccess: () => sfx.click() });
+  const dismiss = useAction(() => POST('/owner/government/dismiss'), { invalidate: inv, success: 'The Mayor was dismissed.' });
+  const [pitch, setPitch] = useState('');
+  const e = g.current;
+  const ruler = g.mayor ? `👑 Mayor ${g.mayor.company?.emoji ?? ''} ${g.mayor.company?.name ?? ''} (${g.mayor.name})` : '👑 The Owner';
+  const running = e?.candidates?.some((c: any) => c.companyId === me.company?.id);
+  return (
+    <div className="card flex flex-col gap-2" data-testid="government">
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex-1"><div className="text-xs muted">The town is run by</div><div className="h2">{ruler}</div>{g.mayor && <div className="text-xs muted">Term ends in {timeLeft(g.mayor.termEndsAt)} (then a new election). The Mayor has the Owner's powers, except for logins, moderation and a new season.</div>}</div>
+        {me.account.role === 'OWNER' && g.mayor && <button className="btn-ghost btn-sm" onClick={async () => (await confirm({ title: 'Dismiss the Mayor?', body: 'You take the town back. Everyone will see it in the news.', danger: true })) && dismiss.mutate(undefined)}>Dismiss the Mayor</button>}
+      </div>
+      {!e && me.company && (
+        <div className="flex flex-col gap-1 border-t border-ink/10 pt-2">
+          <p className="text-sm">Unhappy with how the town is run? A union President can call a <b>vote of no confidence</b> (costs the union {formatBits(g.rules.cost)}). If more companies vote yes than no, and at least {g.rules.quorumPct}% of all companies vote yes, there is an election for Mayor.</p>
+          <button className="btn-bad btn-sm self-start" disabled={call.isPending} onClick={async () => (await confirm({ title: 'Call a vote of no confidence?', body: `${formatBits(g.rules.cost)} comes out of your union's treasury.`, danger: true })) && call.mutate(undefined)} data-testid="call-no-confidence">⚠️ Call a vote of no confidence</button>
+        </div>
+      )}
+      {e?.office === 'noconfidence' && (
+        <div className="flex flex-col gap-2 border-t border-ink/10 pt-2" data-testid="no-confidence">
+          <b>⚠️ Vote of no confidence in {e.target ? `Mayor ${e.target.emoji} ${e.target.name}` : 'the Owner'}{e.caller ? `, called by ${e.caller.emoji} ${e.caller.name}` : ''}</b>
+          <div className="text-sm">👍 {e.tally.yes ?? 0} yes · 👎 {e.tally.no ?? 0} no · needs {Math.ceil((g.rules.quorumPct * g.rules.companies) / 100)} yes votes · closes in {timeLeft(e.closesAt)}</div>
+          {me.company && (
+            <div className="flex gap-2">
+              <button className={e.myVote === 'yes' ? 'btn-bad btn-sm' : 'btn-ghost btn-sm'} onClick={() => ballot.mutate({ id: e.id, choice: 'yes' })}>👍 Yes, replace them{e.myVote === 'yes' ? ' ✅' : ''}</button>
+              <button className={e.myVote === 'no' ? 'btn-good btn-sm' : 'btn-ghost btn-sm'} onClick={() => ballot.mutate({ id: e.id, choice: 'no' })}>👎 No, keep them{e.myVote === 'no' ? ' ✅' : ''}</button>
+            </div>
+          )}
+        </div>
+      )}
+      {e?.office === 'mayor' && (
+        <div className="flex flex-col gap-2 border-t border-ink/10 pt-2" data-testid="mayor-election">
+          <b>🗳️ Election for Mayor: {e.status === 'nominating' ? `nominations close in ${timeLeft(e.votingAt)}` : `voting closes in ${timeLeft(e.closesAt)}`}</b>
+          {!e.candidates.length && <div className="text-sm muted">Nobody is running yet.</div>}
+          {e.candidates.map((c: any) => (
+            <div key={c.companyId} className="flex items-center gap-2 text-sm">
+              <span className="flex-1"><b>{c.company?.emoji} {c.company?.name}</b>{c.pitch ? <i>: "{c.pitch}"</i> : null}</span>
+              <span className="text-xs">{e.tally[c.companyId] ?? 0} votes</span>
+              {e.status === 'voting' && me.company && <button className={e.myVote === c.companyId ? 'btn-good btn-sm' : 'btn-ghost btn-sm'} onClick={() => ballot.mutate({ id: e.id, choice: c.companyId })}>{e.myVote === c.companyId ? '✅ Voted' : '🗳️ Vote'}</button>}
+            </div>
+          ))}
+          {e.status === 'nominating' && me.company && me.account.role === 'ADMIN' && (running ? (
+            <button className="btn-ghost btn-sm self-start" onClick={() => withdraw.mutate(e.id)}>Leave the race</button>
+          ) : (
+            <form className="flex gap-2" onSubmit={(ev) => (ev.preventDefault(), run.mutate({ id: e.id, pitch }))}>
+              <input className="input flex-1" maxLength={200} value={pitch} onChange={(ev) => setPitch(ev.target.value)} placeholder="Your promise to the town" aria-label="Your campaign pitch" />
+              <button className="btn-primary btn-sm" data-testid="run-for-mayor">🗳️ Run for Mayor</button>
+            </form>
+          ))}
+        </div>
+      )}
+      {g.mayor && g.log.length > 0 && (
+        <details className="border-t border-ink/10 pt-2 text-sm">
+          <summary className="cursor-pointer font-bold">📜 What the Mayor did ({g.log.length})</summary>
+          {g.log.map((l: any) => <div key={l.id} className="text-xs py-0.5"><span className="muted">{timeAgo(l.at)}</span> · {l.action.replace(/^mayor /, '')}{l.data && typeof l.data === 'object' ? ` ${JSON.stringify(l.data).slice(0, 120)}` : ''}</div>)}
+        </details>
+      )}
+      {g.past.length > 0 && (
+        <details className="text-xs">
+          <summary className="cursor-pointer">Past votes</summary>
+          {g.past.map((p: any) => <div key={p.id} className="py-0.5">{timeAgo(p.createdAt)} · {p.office === 'noconfidence' ? `No confidence: ${p.winnerId === 'yes' ? 'passed' : 'failed'} (${p.result?.yes ?? 0}–${p.result?.no ?? 0})` : `Mayor: ${p.winner ? `${p.winner.emoji} ${p.winner.name}` : 'nobody ran'}`}</div>)}
+        </details>
+      )}
+    </div>
+  );
+}
+
+function ProposeBill({ cost }: { cost: number }) {
+  const [f, setF] = useState<{ kind: LawKind; value: number; text: string }>({ kind: 'demand', value: 0, text: '' });
+  const [open, setOpen] = useState(false);
+  const send = useAction(() => POST('/game/laws', f), { invalidate: [['laws']], success: '🏛️ Your bill is up for a vote!', onSuccess: () => (setOpen(false), setF({ ...f, text: '' })) });
+  if (!open) return <button className="btn-ghost btn-sm self-start" onClick={() => setOpen(true)} data-testid="propose-bill">✊ Union President: put a bill or demand to the vote</button>;
+  return (
+    <form className="card flex flex-col gap-2" onSubmit={(e) => (e.preventDefault(), send.mutate(undefined))}>
+      <div className="h3">✊ Push for change</div>
+      <select className="input" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as LawKind })} aria-label="Kind of bill">{(Object.entries(LAW_KINDS) as Array<[LawKind, any]>).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}</select>
+      {f.kind === 'demand' ? <input className="input" maxLength={160} value={f.text} onChange={(e) => setF({ ...f, text: e.target.value })} placeholder="Lower the land price! / Build a park! / More customers!" aria-label="Your demand" /> : <label className="label">{LAW_KINDS[f.kind].unit}<input type="number" className="input" value={f.value} onChange={(e) => setF({ ...f, value: Math.floor(Number(e.target.value) || 0) })} /></label>}
+      <p className="text-xs muted">{LAW_KINDS[f.kind].blurb} Costs your union {formatBits(cost)}; one bill per union at a time.</p>
+      <div className="flex gap-2"><button className="btn-primary" disabled={send.isPending}>🏛️ Put it to the vote</button><button type="button" className="btn-ghost" onClick={() => setOpen(false)}>Cancel</button></div>
+    </form>
   );
 }
 

@@ -8,6 +8,8 @@ export interface Me {
   company: { id: string; name: string; emoji: string; color: string; slogan: string; industry: string; status: string; prestige: number; installs: Record<string, number>; toolUses: number; xp: number; level: number; balance: number } | null;
   energy: { now: number; max: number; regen: number };
   unread: number;
+  /** the Owner, or an elected Mayor with the Owner's powers */
+  governing: boolean;
 }
 
 export function useMe() {

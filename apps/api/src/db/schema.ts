@@ -359,6 +359,10 @@ export const laws = live.table('laws', {
   createdAt: ms('created_at').notNull(),
   closesAt: ms('closes_at').notNull(),
   decidedAt: ms('decided_at'),
+  /** union id when a union proposed it (null = the government) */
+  proposedBy: text('proposed_by'),
+  /** a demand: the government's public answer */
+  response: text('response'),
 });
 
 export const lawVotes = live.table(

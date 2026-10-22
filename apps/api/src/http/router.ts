@@ -9,6 +9,7 @@ import { databaseUrl, getDb, schema, type Db } from '../db';
 import { GameError, badRequest, forbidden, unauthorized } from '../lib/errors';
 import { clock, MINUTE } from '../lib/time';
 import { sha256, token } from '../lib/ids';
+import { governs, logMayorAction } from '../services/government';
 
 export type Account = typeof schema.accounts.$inferSelect;
 export type Company = typeof schema.companies.$inferSelect;
@@ -26,6 +27,8 @@ export interface Ctx {
   setCookies: string[];
   account: Account | null;
   company: Company | null;
+  /** a Mayor using the Owner's powers on this request */
+  asMayor?: boolean;
 }
 
 /** Ctx for routes that require a login (account is set). */
@@ -41,16 +44,25 @@ interface Route {
   auth: Auth;
   /** reachable while the account still has to change its password */
   pw: boolean;
+  /** owner routes only the game's creator (role OWNER) may use, never an elected Mayor */
+  dev: boolean;
   fn: (c: any) => unknown;
 }
 
 const routes: Route[] = [];
 const hooks: Array<(c: Ctx) => Promise<void>> = [];
 
-export function route<A extends Auth>(method: string, path: string, auth: A, fn: (c: A extends 'public' ? Ctx : A extends 'user' | 'owner' ? AuthCtx : CoCtx) => unknown, opts: { pw?: boolean } = {}) {
+export function route<A extends Auth>(method: string, path: string, auth: A, fn: (c: A extends 'public' ? Ctx : A extends 'user' | 'owner' ? AuthCtx : CoCtx) => unknown, opts: { pw?: boolean; dev?: boolean } = {}) {
   const keys: string[] = [];
   const re = new RegExp(`^${path.replace(/:(\w+)/g, (_, k) => (keys.push(k), '([^/]+)'))}/?$`);
-  routes.push({ method, re, keys, auth, pw: !!opts.pw, fn });
+  routes.push({ method, re, keys, auth, pw: !!opts.pw, dev: !!opts.dev, fn });
+}
+
+/** Keep an Owner route for the game's creator only (an elected Mayor can not use it). */
+export function devOnly(method: string, path: string) {
+  const r = routes.find((x) => x.method === method && x.re.test(path.replace(/:(\w+)/g, 'x')));
+  if (!r) throw new Error(`devOnly: no route ${method} ${path}`);
+  r.dev = true;
 }
 
 /** Runs before every logged-in request (used to settle timed events). */
@@ -193,7 +205,12 @@ export async function handle(req: Request, ip: string | null = null): Promise<Re
     if (match.auth !== 'public') {
       if (!c.account) throw unauthorized();
       if (c.account.mustChangePassword && !match.pw) throw forbidden('Pick a new password first.', 'must_change_password');
-      if (match.auth === 'owner' && c.account.role !== 'OWNER') throw forbidden('Owner only.', 'owner_only');
+      let asMayor = false;
+      if (match.auth === 'owner' && c.account.role !== 'OWNER') {
+        if (match.dev || !(await governs(c.db, c.account))) throw forbidden(match.dev ? "Only the game's creator (account 01) can do that." : 'Owner only.', 'owner_only');
+        asMayor = true;
+      }
+      c.asMayor = asMayor;
       if (match.auth === 'company') {
         if (!c.company) throw forbidden('You are not part of a company.', 'no_company');
         if (c.company.status !== 'active') throw forbidden('This company is suspended by the Owner.', 'company_suspended');
@@ -201,6 +218,8 @@ export async function handle(req: Request, ip: string | null = null): Promise<Re
       for (const h of hooks) await h(c);
     }
     const out = await match.fn(c);
+    // everything a Mayor does with the Owner's powers is on the public record
+    if (c.asMayor && req.method !== 'GET') await logMayorAction(c.db, c.account!, req.method, url.pathname, c.body).catch(() => null);
     return json(200, out, c.setCookies);
   } catch (e) {
     if (e instanceof GameError) return json(e.status, { error: e.code, message: e.message, ...e.extra }, c.setCookies);
